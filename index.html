@@ -212,6 +212,22 @@
             db.ref('rooms/' + roomID).remove().then(() => location.reload());
         });
     }
+    const firebaseConfig = { 
+    databaseURL: "https://carvain7-48b13-default-rtdb.firebaseio.com/" 
+};
+
+// Безпечна ініціалізація
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    var db = firebase.database();
+    console.log("Зв'язок з базою налаштовано!");
+} catch (e) {
+    console.error("Помилка підключення Firebase:", e);
+    alert("Критична помилка конфігурації!");
+}
 </script>
 </body>
 </html>
+
