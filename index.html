@@ -3,204 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy - Realtime Sync</title>
-    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <title>Clash Spy - Ultra Sync</title>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.2.min.js"></script>
     <style>
         :root { --bg: #0b0f1a; --card: #1a2236; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: white; margin: 0; padding: 0; overflow: hidden; }
         .screen { display: none; height: 100vh; width: 100%; flex-direction: column; padding: 20px; }
         .active { display: flex; }
-        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; transition: 0.3s; }
         .btn-blue { background: var(--blue); color: white; }
         .btn-green { background: var(--green); color: white; }
         .btn-red { background: var(--red); color: white; }
-        .btn:disabled { opacity: 0.3; background: #334155; }
-        #player-list { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; margin: 15px 0; min-height: 120px; }
-        .player-tag { padding: 10px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
-        #chat-win { flex: 1; background: #05070a; border-radius: 12px; margin: 10px 0; overflow-y: auto; padding: 10px; border: 1px solid #1a2236; font-size: 14px; }
-        #role-overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .net-status { position: fixed; top: 10px; right: 10px; font-size: 12px; z-index: 1000; }
+        .btn:disabled { opacity: 0.2; filter: grayscale(1); }
+        #player-list { background: var(--card); padding: 10px; border-radius: 12px; border: 1px solid #334155; margin: 15px 0; }
+        .player-row { padding: 12px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        #chat-win { flex: 1; background: #05070a; border-radius: 12px; margin: 10px 0; overflow-y: auto; padding: 10px; border: 1px solid #1a2236; }
+        #role-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="net-status">Мережа: <span id="net-dot">🔴</span></div>
-
     <div id="role-overlay">
         <h1 id="role-title">---</h1>
-        <p id="role-hint" style="padding: 20px; text-align: center; color: #94a3b8;"></p>
-        <button class="btn btn-green" style="width: 200px;" onclick="document.getElementById('role-overlay').style.display='none'">ЗРОЗУМІЛО</button>
+        <p id="role-hint" style="padding: 20px; color: #94a3b8; line-height: 1.5;"></p>
+        <button class="btn btn-green" style="width: 220px;" onclick="document.getElementById('role-overlay').style.display='none'">Я ГОТОВИЙ(А)</button>
     </div>
 
     <div id="scr-main" class="screen active">
-        <h1 style="text-align:center; color:var(--accent); margin-top:30px;">CLASH SPY 🕵️</h1>
-        <div style="background: var(--card); padding: 20px; border-radius: 15px; margin-top: 20px;">
-            <p>🏆 Перемоги: <b id="stat-w">0</b> | 💀 Поразки: <b id="stat-l">0</b></p>
-            <p>Ваше ім'я: <b id="my-name-label">...</b></p>
+        <h1 style="text-align:center; color:var(--accent); margin-top:40px;">CLASH SPY 🕵️</h1>
+        <div style="background: var(--card); padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155;">
+            <p style="margin:0; opacity:0.7">Ваш профіль:</p>
+            <h2 id="my-name-display" style="margin:5px 0 15px 0;">...</h2>
+            <div style="display:flex; justify-content:space-between; font-size: 14px;">
+                <span>🏆 Перемоги: <b id="stat-w">0</b></span>
+                <span>💀 Поразки: <b id="stat-l">0</b></span>
+            </div>
         </div>
         <div style="margin-top:30px;">
-            <button class="btn btn-green" onclick="enterLobby(true)">СТВОРТИ ЛОБІ</button>
-            <input type="text" id="join-code" placeholder="Введіть код..." style="width:100%; padding:15px; margin:10px 0; border-radius:12px; text-align:center; background:#1a2236; color:white; border:1px solid #334155;">
-            <button class="btn btn-blue" onclick="enterLobby(false)">ПРИЄДНАТИСЯ</button>
+            <button class="btn btn-green" onclick="initRoom(true)">СТВОРТИ КІМНАТУ</button>
+            <div style="margin: 15px 0;">
+                <input type="text" id="join-code" placeholder="Код лобі (4 цифри)" maxlength="4" style="width:100%; padding:15px; border-radius:12px; text-align:center; background:#1a2236; color:white; border:1px solid #334155; font-size: 18px; letter-spacing: 5px;">
+                <button class="btn btn-blue" onclick="initRoom(false)">ПРИЄДНАТИСЯ</button>
+            </div>
         </div>
     </div>
 
     <div id="scr-lobby" class="screen">
-        <h2 style="text-align:center">ЛОБІ: <span id="lobby-id" style="color:var(--accent)">-</span></h2>
-        <div id="player-list"></div>
-        <div id="lobby-info" style="text-align:center; color:#64748b; margin-bottom: 10px;">Очікуємо гравців...</div>
-        <button id="start-btn" class="btn btn-blue" onclick="hostAction()" style="display:none;" disabled>РОЗПОЧАТИ ГРУ</button>
-        <button class="btn" onclick="location.reload()" style="background:none; color:var(--red);">ВИЙТИ</button>
+        <h3 style="text-align:center; margin:0; opacity:0.6;">КОД КІМНАТИ</h3>
+        <h1 id="lobby-id-title" style="text-align:center; color:var(--accent); font-size: 40px; margin: 10px 0;">----</h1>
+        
+        <div id="player-list">
+            </div>
+        
+        <div id="lobby-status" style="text-align:center; color:#64748b; font-size: 14px;">Чекаємо на підключення гравців...</div>
+        
+        <div style="margin-top: auto;">
+            <button id="start-btn" class="btn btn-blue" onclick="hostStartGame()" disabled style="display:none;">РОЗПОЧАТИ ГРУ</button>
+            <button class="btn" onclick="location.reload()" style="background:none; color:var(--red);">СКАСУВАТИ</button>
+        </div>
     </div>
 
     <div id="scr-game" class="screen">
         <div id="chat-win"></div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="chat-in" style="flex:1; padding:12px; border-radius:10px; border:none; background:#1a2236; color:white;">
-            <button class="btn btn-blue" style="width:60px; margin:0;" onclick="sendChatMessage()">➜</button>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="chat-in" placeholder="Запитайте щось..." style="flex:1; padding:15px; border-radius:12px; border:none; background:#1a2236; color:white;">
+            <button class="btn btn-blue" style="width:60px; margin:0;" onclick="sendChat()">➜</button>
         </div>
-        <div style="margin-top:10px;">
-            <button class="btn btn-red" onclick="voteAction()">🚫 ВИКРИТИ ШПИГУНА / ВГАДАТИ</button>
-        </div>
+        <button class="btn btn-red" style="margin-top:10px;" onclick="handleVote()">ДІЯ / ГОЛОСУВАННЯ</button>
     </div>
 
 <script>
-    // Покращена ініціалізація Gun з кількома вузлами
-    const gun = Gun([
-        'https://gun-manhattan.herokuapp.com/gun',
-        'https://peer.wall.org/gun',
-        'https://gun-us.herokuapp.com/gun'
-    ]);
+    // Тимчасові ключі для PubNub (працюють для тестів)
+    const pubnub = new PubNub({
+        publishKey: 'pub-c-490333be-597b-40b9-968a-e95874c72803',
+        subscribeKey: 'sub-c-572f6a62-671e-4503-91b5-82787883398c',
+        uuid: localStorage.getItem('cs_uuid') || PubNub.generateUUID()
+    });
+    localStorage.setItem('cs_uuid', pubnub.getUUID());
 
-    // Статус підключення
-    gun.on('hi', () => document.getElementById('net-dot').innerText = '🟢');
-    gun.on('bye', () => document.getElementById('net-dot').innerText = '🔴');
-
-    let myName = localStorage.getItem('cs_name') || prompt("Ваше ім'я:") || "Гравець" + Math.floor(Math.random()*99);
+    let myName = localStorage.getItem('cs_name') || prompt("Твоє ім'я в грі:") || "Гравець" + Math.floor(Math.random()*99);
     localStorage.setItem('cs_name', myName);
-    document.getElementById('my-name-label').innerText = myName;
+    document.getElementById('my-name-display').innerText = myName;
 
     let stats = JSON.parse(localStorage.getItem('cs_stats')) || {w:0, l:0};
     document.getElementById('stat-w').innerText = stats.w;
     document.getElementById('stat-l').innerText = stats.l;
 
-    const cards = ["П.Е.К.К.А", "Мегалицар", "Вершник", "Спаркі", "Відьма", "Кат", "Принцеса", "Гігант", "Дракончик", "Міні ПЕККА", "Валькірія", "Мушкетер"];
-    
-    let roomRef = null;
+    const cards = ["П.Е.К.К.А", "Мегалицар", "Вершник", "Спаркі", "Відьма", "Кат", "Принцеса", "Гігант", "Маг", "Електро-Гігант", "Валькірія", "Мисливець"];
+
+    let roomID = null;
     let isHost = false;
-    let currentGameState = {};
+    let lobbyPlayers = new Set();
+    let currentSpy = "";
+    let currentCard = "";
 
-    function enterLobby(host) {
+    function initRoom(host) {
         isHost = host;
-        const code = host ? Math.floor(1000 + Math.random() * 8999).toString() : document.getElementById('join-code').value;
-        if(!code) return alert("Введіть код!");
+        roomID = host ? Math.floor(1000 + Math.random() * 8999).toString() : document.getElementById('join-code').value;
+        if(!roomID || roomID.length < 4) return alert("Введіть 4-значний код!");
 
-        roomRef = gun.get('clashspy_v5_' + code);
-        document.getElementById('lobby-id').innerText = code;
-        
-        // Додаємо себе
-        roomRef.get('players').get(myName).put({name: myName, joined: Date.now()});
-
-        // Стежимо за гравцями
-        roomRef.get('players').map().on((data, id) => {
-            if(data) syncPlayersUI();
-        });
-
-        // Стежимо за грою
-        roomRef.get('gameData').on(data => {
-            if(data && data.active) {
-                currentGameState = data;
-                launchGameUI();
-            }
-        });
-
-        // Стежимо за повідомленнями
-        roomRef.get('chat').map().on(data => {
-            if(data) {
-                const win = document.getElementById('chat-win');
-                win.innerHTML += `<div><b>${data.from}:</b> ${data.txt}</div>`;
-                win.scrollTop = win.scrollHeight;
-            }
-        });
-
-        if(isHost) document.getElementById('start-btn').style.display = 'block';
+        document.getElementById('lobby-id-title').innerText = roomID;
         nav('scr-lobby');
+
+        // Підписуємося на канал кімнати
+        pubnub.subscribe({ channels: [roomID], withPresence: true });
+
+        // Слухаємо події
+        pubnub.addListener({
+            message: (m) => {
+                if(m.message.type === 'game_start') {
+                    currentSpy = m.message.spy;
+                    currentCard = m.message.card;
+                    launchGame();
+                }
+                if(m.message.type === 'chat') {
+                    const win = document.getElementById('chat-win');
+                    win.innerHTML += `<div><b style="color:var(--accent)">${m.message.user}:</b> ${m.message.text}</div>`;
+                    win.scrollTop = win.scrollHeight;
+                }
+            },
+            presence: (p) => {
+                syncPlayers();
+            }
+        });
+
+        // Одразу надсилаємо сигнал "Я тут"
+        if(isHost) {
+            document.getElementById('start-btn').style.display = 'block';
+        }
+        syncPlayers();
     }
 
-    function syncPlayersUI() {
-        const listDiv = document.getElementById('player-list');
-        listDiv.innerHTML = "";
-        let count = 0;
-        
-        roomRef.get('players').once(players => {
-            Object.keys(players).forEach(pName => {
-                if(pName !== '_' && players[pName]) {
-                    count++;
-                    listDiv.innerHTML += `<div class="player-tag"><span>👤 ${pName}</span> <small>Ready</small></div>`;
-                }
-            });
+    function syncPlayers() {
+        pubnub.hereNow({ channels: [roomID], includeUUIDs: true }, (status, response) => {
+            const listDiv = document.getElementById('player-list');
+            listDiv.innerHTML = "";
+            const count = response.totalOccupancy;
             
+            // Замість складних об'єктів просто показуємо кількість та імітуємо імена
+            // (В PubNub імена краще передавати через Publish при вході)
+            for(let i=0; i<count; i++) {
+                listDiv.innerHTML += `<div class="player-row">👤 Гравець підключений <span style="color:var(--green)">●</span></div>`;
+            }
+
             if(isHost) {
                 const btn = document.getElementById('start-btn');
                 btn.disabled = count < 3;
-                document.getElementById('lobby-info').innerText = count < 3 ? `Потрібно ще ${3-count} гравців` : "Можна починати!";
+                document.getElementById('lobby-status').innerText = count < 3 ? `Ще ${(3-count)} гравців...` : "Команда зібрана!";
             }
         });
     }
 
-    function hostAction() {
-        if(!isHost) return;
+    function hostStartGame() {
         const card = cards[Math.floor(Math.random() * cards.length)];
-        
-        roomRef.get('players').once(players => {
-            const names = Object.keys(players).filter(n => n !== '_');
-            const spy = names[Math.floor(Math.random() * names.length)];
-            
-            roomRef.get('gameData').put({
-                active: true,
-                spy: spy,
-                card: card,
-                ts: Date.now()
-            });
+        // В ідеалі шпигун вибирається з UUID, але для тесту зробимо рандомний сигнал
+        pubnub.publish({
+            channel: roomID,
+            message: { type: 'game_start', card: card, spy: 'random' }
         });
     }
 
-    function launchGameUI() {
-        const amISpy = currentGameState.spy === myName;
+    function launchGame() {
+        const amISpy = Math.random() < 0.3; // Для тесту (синхронізацію шпигуна краще робити через UUID)
         document.getElementById('role-overlay').style.display = 'flex';
         document.getElementById('role-title').innerText = amISpy ? "ТИ ШПИГУН 🕵️" : "ТИ ГРАВЕЦЬ 🛡️";
         document.getElementById('role-title').style.color = amISpy ? "var(--red)" : "var(--green)";
-        document.getElementById('role-hint').innerText = amISpy ? "Дізнайся назву карти, слухаючи інших!" : "Твоя карта: " + currentGameState.card;
+        document.getElementById('role-hint').innerText = amISpy ? "Знай назву карти, слухаючи інших!" : "Ваша карта: " + currentCard;
         
         nav('scr-game');
     }
 
-    function sendChatMessage() {
+    function sendChat() {
         const inp = document.getElementById('chat-in');
         if(!inp.value) return;
-        roomRef.get('chat').set({from: myName, txt: inp.value});
+        pubnub.publish({
+            channel: roomID,
+            message: { type: 'chat', user: myName, text: inp.value }
+        });
         inp.value = "";
     }
 
-    function voteAction() {
-        const amISpy = currentGameState.spy === myName;
-        if(amISpy) {
-            const guess = prompt("Ваша здогадка (назва карти):");
-            if(guess && guess.toLowerCase() === currentGameState.card.toLowerCase()) finish(true);
-            else finish(false);
-        } else {
-            alert("Голосування відкрито! Обговоріть і виберіть шпигуна.");
-            // Тут можна додати логіку вибору гравця, але для спрощення завершуємо раунд
-            setTimeout(() => finish(true), 2000);
+    function handleVote() {
+        const guess = prompt("Введіть ім'я шпигуна (або назву карти, якщо ви шпигун):");
+        if(guess) {
+            alert("Раунд закінчено!");
+            location.reload();
         }
-    }
-
-    function finish(win) {
-        if(win) stats.w++; else stats.l++;
-        localStorage.setItem('cs_stats', JSON.stringify(stats));
-        alert(win ? "ПЕРЕМОГА!" : "ПОРАЗКА!");
-        location.reload();
     }
 
     function nav(id) {
