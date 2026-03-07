@@ -12,15 +12,13 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        /* Вкладки */
-        .tab-bar { display: flex; background: #161f32; border-bottom: 1px solid #2d3748; position: sticky; top: 0; z-index: 10; }
+        .tab-bar { display: flex; background: #161f32; border-bottom: 1px solid #2d3748; position: sticky; top: 0; z-index: 20; }
         .tab { flex: 1; padding: 15px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; opacity: 0.5; transition: 0.3s; }
         .tab.active { opacity: 1; border-bottom: 3px solid var(--accent); color: var(--accent); }
 
         .screen { display: none; height: calc(100vh - 50px); width: 100%; flex-direction: column; padding: 20px; overflow-y: auto; position: relative; }
         .active-screen { display: flex; }
 
-        /* Елементи інтерфейсу */
         .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; margin: 8px 0; font-size: 16px; color: white; text-transform: uppercase; transition: 0.1s; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
         .btn-blue { background: var(--blue); }
         .btn-green { background: var(--green); }
@@ -31,15 +29,13 @@
         input { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #2d3748; background: #111827; color: white; font-size: 18px; margin-bottom: 10px; text-align: center; outline: none; }
 
         .card-display { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; border: 2px solid var(--accent); margin-bottom: 15px; }
-        .unit-img { width: 120px; height: 145px; object-fit: contain; margin-bottom: 10px; border-radius: 10px; }
+        .unit-img { width: 110px; height: 135px; object-fit: contain; margin-bottom: 10px; border-radius: 10px; }
         
-        /* Рейтинг */
         .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; align-items: center; border: 1px solid transparent; }
-        .rank-item.me { background: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent); }
+        .rank-item.me { background: rgba(245, 158, 11, 0.2) !important; border: 1px solid var(--accent) !important; }
         .rank-pos { color: var(--accent); font-weight: 900; width: 35px; display: inline-block; }
         
-        /* Фіксована панель мого місця */
-        .my-rank-fixed { position: sticky; bottom: -21px; left: -20px; right: -20px; width: calc(100% + 40px); background: #1c2538; padding: 15px 20px; border-top: 2px solid var(--accent); display: flex; justify-content: space-between; font-weight: bold; z-index: 5; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); margin-top: auto; }
+        .my-rank-fixed { position: sticky; bottom: -21px; left: -20px; right: -20px; width: calc(100% + 40px); background: #1c2538; padding: 15px 20px; border-top: 2px solid var(--accent); display: flex; justify-content: space-between; font-weight: bold; z-index: 30; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); margin-top: auto; }
 
         #chat-window { flex: 1; background: #05070a; margin: 10px 0; padding: 12px; overflow-y: auto; border-radius: 12px; border: 1px solid #1a2236; font-size: 14px; }
         .msg { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; word-break: break-word; }
@@ -47,10 +43,10 @@
 </head>
 <body>
 
-    <div class="tab-bar" id="main-tabs">
-        <div class="tab active" onclick="switchTab('game')">ГРА</div>
-        <div class="tab" onclick="switchTab('profile')">ПРОФІЛЬ</div>
-        <div class="tab" onclick="switchTab('leaderboard')">ТОП-100</div>
+    <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('game', this)">ГРА</div>
+        <div class="tab" onclick="switchTab('profile', this)">ПРОФІЛЬ</div>
+        <div class="tab" onclick="switchTab('leaderboard', this)">ТОП-100</div>
     </div>
 
     <div id="scr-game" class="screen active-screen">
@@ -75,7 +71,7 @@
             <div class="card-display" id="role-card"></div>
             <div id="chat-window"></div>
             <div style="display:flex; gap:5px;">
-                <input type="text" id="chat-input" placeholder="Твоє питання..." style="flex:1; margin:0;">
+                <input type="text" id="chat-input" placeholder="Твоє питання...">
                 <button class="btn btn-blue" style="width:60px; margin:0;" onclick="sendMsg()">➜</button>
             </div>
             <button id="finish-btn" class="btn btn-red" onclick="finishGameAction()" style="display:none; margin-top:10px; padding:8px; font-size:12px;">ЗАВЕРШИТИ (HOST)</button>
@@ -94,7 +90,7 @@
 
     <div id="scr-leaderboard" class="screen">
         <h2 style="color:var(--accent); margin-bottom:15px;">ТОП-100 ГРАВЦІВ</h2>
-        <div id="rank-list" style="padding-bottom: 20px;">Завантаження рейтингу...</div>
+        <div id="rank-list" style="padding-bottom: 20px;"></div>
     </div>
 
 <script>
@@ -115,8 +111,10 @@
     let roomID = null;
     let isHost = false;
 
+    // Реєстрація без дублів
     db.ref('users/' + uID).update({ name: uName });
 
+    // Профіль
     db.ref('users/' + uID).on('value', (snap) => {
         const data = snap.val() || { wins: 0 };
         document.getElementById('prof-name').innerText = uName;
@@ -137,49 +135,51 @@
         { n: "Кат", i: "https://vignette.wikia.nocookie.net/clashroyale/images/2/22/ExecutionerCard.png" }
     ];
 
-    function switchTab(tabId) {
+    function switchTab(tabId, el) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById('scr-' + tabId).classList.add('active-screen');
-        event.currentTarget.classList.add('active');
+        el.classList.add('active');
         if(tabId === 'leaderboard') loadLeaderboard();
     }
 
-    // ОНОВЛЕНИЙ ТОП З ПІДСВІТКОЮ ТА МІСЦЕМ
     function loadLeaderboard() {
         db.ref('users').once('value', (snap) => {
             const list = document.getElementById('rank-list');
-            list.innerHTML = "";
-            let allPlayers = [];
-
+            list.innerHTML = ""; // Очистка перед рендером
+            
+            let playersArray = [];
             snap.forEach(child => {
                 const p = child.val();
-                allPlayers.push({ id: child.key, name: p.name || "Гравець", wins: p.wins || 0 });
+                playersArray.push({ id: child.key, name: p.name || "Гравець", wins: p.wins || 0 });
             });
 
-            allPlayers.sort((a, b) => b.wins - a.wins);
+            // Сортування
+            playersArray.sort((a, b) => b.wins - a.wins);
 
-            const myIndex = allPlayers.findIndex(p => p.id === uID);
+            const myIndex = playersArray.findIndex(p => p.id === uID);
             const myRank = myIndex + 1;
-            const top100 = allPlayers.slice(0, 100);
+            const top100 = playersArray.slice(0, 100);
             
+            let htmlContent = "";
             top100.forEach((p, i) => {
                 let badge = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
-                let isMe = p.id === uID ? "me" : "";
-                list.innerHTML += `
-                    <div class="rank-item ${isMe}">
+                let isMeClass = p.id === uID ? "me" : "";
+                htmlContent += `
+                    <div class="rank-item ${isMeClass}">
                         <span><span class="rank-pos">${i+1}</span> ${badge} ${p.name}</span>
                         <span style="color:var(--accent); font-weight:bold;">🏆 ${p.wins}</span>
                     </div>`;
             });
 
             if (myRank > 0) {
-                list.innerHTML += `
+                htmlContent += `
                     <div class="my-rank-fixed">
                         <span>Твоє місце: <span style="color:var(--accent)">#${myRank}</span></span>
-                        <span>🏆 ${allPlayers[myIndex].wins}</span>
+                        <span>${uName} 🏆 ${playersArray[myIndex].wins}</span>
                     </div>`;
             }
+            list.innerHTML = htmlContent;
         });
     }
 
