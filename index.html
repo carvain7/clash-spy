@@ -3,76 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy - Emoji Edition</title>
+    <title>Clash Spy - Pro Stats</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 0; overflow: hidden; }
         
-        /* Navigation Bar */
+        /* Навігація - Фіксоване центрування */
         .nav-bar { 
-            position: fixed; bottom: 0; width: 100%; height: 70px; 
-            background: #1a2236; display: flex; justify-content: space-around; 
-            align-items: center; border-top: 1px solid #334155; z-index: 100; 
+            position: fixed; bottom: 0; width: 100%; height: 65px; 
+            background: #1a2236; display: flex; align-items: center; 
+            justify-content: center; border-top: 1px solid #334155; z-index: 100; 
         }
         .nav-item { 
-            color: #64748b; font-size: 28px; text-align: center; 
-            flex: 1; cursor: pointer; transition: 0.2s; 
+            font-size: 26px; width: 80px; text-align: center; 
+            cursor: pointer; transition: 0.2s; color: #64748b;
         }
-        .nav-item.active { color: var(--accent); transform: scale(1.2); }
+        .nav-item.active { color: var(--accent); transform: scale(1.1); }
 
-        /* Screens */
-        .screen { display: none; height: calc(100vh - 70px); width: 100%; flex-direction: column; overflow-y: auto; }
+        .screen { display: none; height: calc(100vh - 65px); width: 100%; flex-direction: column; overflow-y: auto; }
         .active { display: flex; }
 
-        .container { padding: 25px; text-align: center; }
-        .btn { background: var(--blue); color: white; border: none; padding: 16px; border-radius: 12px; width: 100%; font-weight: bold; margin: 10px 0; cursor: pointer; font-size: 16px; }
+        .container { padding: 20px; text-align: center; }
+        .btn { background: var(--blue); color: white; border: none; padding: 16px; border-radius: 12px; width: 100%; font-weight: bold; margin: 8px 0; cursor: pointer; }
         
-        /* Role Announcement */
+        /* Прогрес-бар */
+        .progress-container { background: #0f172a; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; border: 1px solid #334155; }
+        #progress-fill { background: var(--green); height: 100%; width: 0%; transition: 0.5s; }
+
         #role-announcer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
-        
-        #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px 25px; border-radius: 15px; font-weight: bold; z-index: 3000; transition: 0.5s; width: 80%; text-align: center; }
+        #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; font-weight: bold; z-index: 3000; transition: 0.5s; width: 80%; text-align: center; }
         #toast.show { top: 20px; }
 
         #chat-window { background: #020617; flex: 1; border-radius: 10px; overflow-y: auto; padding: 15px; margin: 10px 0; text-align: left; border: 1px solid #1e293b; }
-        .card-box { background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid var(--accent); border-radius: 20px; padding: 25px; text-align: left; margin-top: 10px; }
-        .grid-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .grid-item { background: white; color: black; padding: 15px; border-radius: 10px; font-weight: bold; text-align: center; }
+        .card-box { background: #1e293b; border: 1px solid var(--accent); border-radius: 15px; padding: 20px; text-align: left; }
     </style>
 </head>
 <body>
 
-    <div id="role-announcer"><h1 id="role-text" style="font-size: 40px;">ГОТУЙСЯ...</h1></div>
-    <div id="toast">Повідомлення</div>
+    <div id="role-announcer"><h1 id="role-text">ГОТУЙСЯ...</h1></div>
+    <div id="toast">Результат</div>
 
     <div id="scr-main" class="screen active">
         <div class="container">
-            <h1 style="color:var(--accent); font-size:42px; margin-top:40px;">CLASH SPY</h1>
-            <button class="btn" onclick="openLobby(true)" style="background:var(--green)">✨ СТВОРИТИ</button>
-            <input type="text" id="join-code" placeholder="КОД..." style="width:85%; padding:15px; border-radius:12px; border:none; text-align:center; font-size:22px; background:#1e293b; color:white; margin: 10px 0;">
-            <button class="btn" onclick="openLobby(false)" style="background:var(--accent); color:black;">🔑 УВІЙТИ</button>
+            <h1 style="color:var(--accent); margin-top:30px;">CLASH SPY</h1>
+            <button class="btn" onclick="openLobby(true)" style="background:var(--green)">Створити гру</button>
+            <input type="text" id="join-code" placeholder="Код..." style="width:80%; padding:15px; border-radius:10px; border:none; text-align:center; background:#1e293b; color:white; margin:10px 0;">
+            <button class="btn" onclick="openLobby(false)" style="background:var(--accent); color:black;">Приєднатися</button>
         </div>
     </div>
 
     <div id="scr-profile" class="screen">
         <div class="container">
-            <h1>ПРОФІЛЬ</h1>
+            <h2>Твій Профіль</h2>
             <div class="card-box">
-                <p>🏆 Перемог: 24</p>
-                <p>🏅 Ранг: Майстер</p>
+                <p>🏆 Перемог: <span id="stat-wins">0</span></p>
+                <p>💀 Поразок: <span id="stat-loses">0</span></p>
+                <p>📊 КД: <span id="stat-kd">0.00</span></p>
+                <hr style="opacity:0.1">
+                <p>🎖️ Ранг: <b id="stat-rank" style="color:var(--accent)">Новачок</b></p>
+                <div class="progress-container"><div id="progress-fill"></div></div>
+                <p id="next-rank-info" style="font-size:12px; color:#64748b">Ще 5 до Воїна</p>
             </div>
         </div>
     </div>
 
     <div id="scr-lobby" class="screen">
         <div class="container">
-            <h1 style="font-size: 20px; opacity: 0.6;">ЛОБІ</h1>
-            <div style="font-size: 45px; color:var(--accent); font-weight:bold; margin: 10px 0;" id="room-id">-----</div>
-            <div style="background:var(--card); padding:20px; border-radius:15px; text-align:left;">
-                <p>👤 Ви (Host) ✅</p>
-            </div>
-            <button class="btn" onclick="runGame()" style="background:var(--blue); margin-top:30px;">🚀 ПОЧАТИ</button>
-            <button class="btn" onclick="location.reload()" style="background:none; color:var(--red);">Вийти</button>
+            <h1>ЛОБІ: <span id="room-id" style="color:var(--accent)">-</span></h1>
+            <div class="card-box">👤 Ви (Host) ✅</div>
+            <button class="btn" onclick="runGame()" style="background:var(--blue); margin-top:20px;">ПОЧАТИ</button>
+            <button class="btn" onclick="resetToMenu()" style="background:none; color:var(--red);">Вийти</button>
         </div>
     </div>
 
@@ -80,47 +81,61 @@
         <div class="container" style="display:flex; flex-direction:column; height:100%;">
             <div id="chat-window"></div>
             <div id="game-actions">
-                <button id="btn-spy" class="btn" onclick="nav('scr-guess', null, 'game')" style="display:none; background:var(--accent); color:black;">🎯 ВГАДАТИ</button>
-                <button id="btn-player" class="btn" onclick="nav('scr-vote', null, 'game')" style="display:none; background:var(--red);">🚫 ВИКРИТИ</button>
+                <button id="btn-spy" class="btn" onclick="nav('scr-guess',null,'game')" style="display:none; background:var(--accent); color:black;">🎯 ВГАДАТИ</button>
+                <button id="btn-player" class="btn" onclick="nav('scr-vote',null,'game')" style="display:none; background:var(--red);">🚫 ВИКРИТИ</button>
             </div>
-            <div style="display:flex; gap:10px; padding-bottom: 10px;">
-                <input type="text" id="chat-msg" placeholder="Текст..." style="flex:1; padding:15px; border-radius:10px; border:none; background:#1e293b; color:white;">
-                <button class="btn" id="send-btn" onclick="sendMsg()" style="width:60px; margin:0;">➜</button>
+            <div style="display:flex; gap:10px; padding-bottom:10px;">
+                <input type="text" id="chat-msg" placeholder="Текст..." style="flex:1; padding:12px; border-radius:10px; border:none; background:#1e293b; color:white;">
+                <button class="btn" onclick="sendMsg()" style="width:50px; margin:0;">➜</button>
             </div>
         </div>
     </div>
 
     <div id="scr-card" class="screen">
-        <div class="container">
-            <h1 id="card-header">КАРТА</h1>
-            <div id="card-content"></div>
-        </div>
+        <div class="container"><h1>КАРТА</h1><div id="card-content"></div></div>
     </div>
 
     <div id="scr-guess" class="screen">
-        <div class="container"><h1>ЯКА КАРТА?</h1><div class="grid-box" id="guess-grid"></div><button class="btn" onclick="nav('scr-game', null, 'game')">Назад</button></div>
+        <div class="container"><h3>ЯКА КАРТА?</h3><div id="guess-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div></div>
     </div>
     <div id="scr-vote" class="screen">
-        <div class="container"><h1>ХТО ШПИГУН?</h1><div class="grid-box"><div class="grid-item" onclick="endGame('Шпигуна вигнано!')">👤 Гравець 2</div></div><button class="btn" onclick="nav('scr-game', null, 'game')">Назад</button></div>
+        <div class="container"><h3>ХТО ШПИГУН?</h3><button class="btn" onclick="finishGame(true)">👤 Player_2</button></div>
     </div>
 
     <nav class="nav-bar" id="main-nav">
-        <div class="nav-item active" onclick="nav('scr-main', this, 'menu')" title="Головна">🏠</div>
-        <div class="nav-item" onclick="nav('scr-profile', this, 'menu')" title="Профіль">👤</div>
+        <div class="nav-item active" onclick="nav('scr-main', this, 'menu')">🏠</div>
+        <div class="nav-item" onclick="nav('scr-profile', this, 'menu')">👤</div>
     </nav>
-
     <nav class="nav-bar" id="game-nav" style="display:none;">
-        <div class="nav-item active" onclick="nav('scr-game', this, 'game')" title="Чат">💬</div>
-        <div class="nav-item" onclick="nav('scr-card', this, 'game')" title="Ваша карта">🃏</div>
+        <div class="nav-item active" onclick="nav('scr-game', this, 'game')">💬</div>
+        <div class="nav-item" onclick="nav('scr-card', this, 'game')">🃏</div>
     </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const cards = [{n: "П.Е.К.К.А", hp: 3450, dmg: 678}, {n: "Мегалицар", hp: 3300, dmg: 222}, {n: "Спаркі", hp: 1200, dmg: 1100}];
+        let stats = JSON.parse(localStorage.getItem('clashStats')) || { wins: 0, loses: 0 };
+        const cards = [{n:"П.Е.К.К.А",hp:3450},{n:"Мегалицар",hp:3300},{n:"Спаркі",hp:1200}];
         let isSpy = false;
-        let myCard = cards[0];
+
+        function updateStatsUI() {
+            const kd = stats.wins / (stats.loses || 1);
+            document.getElementById('stat-wins').innerText = stats.wins;
+            document.getElementById('stat-loses').innerText = stats.loses;
+            document.getElementById('stat-kd').innerText = kd.toFixed(2);
+            
+            let rank = "Новачок", next = 5, color = "#fff";
+            if(stats.wins >= 30) { rank = "Легенда"; next = 100; color="#ef4444"; }
+            else if(stats.wins >= 15) { rank = "Мастер"; next = 30; color="#3b82f6"; }
+            else if(stats.wins >= 5) { rank = "Воїн"; next = 15; color="#10b981"; }
+            
+            document.getElementById('stat-rank').innerText = rank;
+            document.getElementById('stat-rank').style.color = color;
+            const progress = (stats.wins / next) * 100;
+            document.getElementById('progress-fill').style.width = progress + "%";
+            document.getElementById('next-rank-info').innerText = `До наступного рангу: ${next - stats.wins} перемог`;
+        }
 
         function nav(id, el, type) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -131,49 +146,54 @@
         }
 
         function openLobby(isNew) {
-            const code = isNew ? Math.random().toString(36).substring(2, 7).toUpperCase() : document.getElementById('join-code').value.toUpperCase();
-            document.getElementById('room-id').innerText = code;
             document.getElementById('main-nav').style.display = 'none';
+            document.getElementById('room-id').innerText = isNew ? "AX72" : "JOINED";
             nav('scr-lobby');
         }
 
         function runGame() {
             isSpy = Math.random() < 0.3;
-            myCard = cards[Math.floor(Math.random()*cards.length)];
             const ann = document.getElementById('role-announcer');
-            const txt = document.getElementById('role-text');
             ann.style.display = 'flex';
-            txt.innerText = isSpy ? "ТИ — ШПИГУН 🕵️" : "ТИ — ГРАВЕЦЬ 🛡️";
-            txt.style.color = isSpy ? "var(--red)" : "var(--green)";
-
+            document.getElementById('role-text').innerText = isSpy ? "ТИ — ШПИГУН 🕵️" : "ТИ — ГРАВЕЦЬ 🛡️";
+            
             setTimeout(() => {
                 ann.style.display = 'none';
                 document.getElementById('game-nav').style.display = 'flex';
+                document.getElementById(isSpy ? 'btn-spy' : 'btn-player').style.display = 'block';
+                document.getElementById('card-content').innerHTML = isSpy ? "Вгадай карту!" : "Твоя карта: " + cards[0].n;
                 if(isSpy) {
-                    document.getElementById('btn-spy').style.display = 'block';
-                    document.getElementById('card-content').innerHTML = `<div class="card-box"><p>Вгадай карту!</p></div>`;
-                    document.getElementById('guess-grid').innerHTML = cards.map(c => `<div class="grid-item" onclick="endGame('Кінець')">${c.n}</div>`).join('');
-                } else {
-                    document.getElementById('btn-player').style.display = 'block';
-                    document.getElementById('card-content').innerHTML = `<div class="card-box"><h2>${myCard.n}</h2><p>❤️ HP: ${myCard.hp}</p><p>⚔️ DMG: ${myCard.dmg}</p></div>`;
+                    document.getElementById('guess-grid').innerHTML = cards.map(c => `<button class="btn" onclick="finishGame(${c.n==='П.Е.К.К.А'})">${c.n}</button>`).join('');
                 }
                 nav('scr-game', document.querySelector('#game-nav .nav-item'), 'game');
             }, 3000);
         }
 
-        function sendMsg() {
-            const inp = document.getElementById('chat-msg'), win = document.getElementById('chat-window');
-            if(!inp.value) return;
-            win.innerHTML += `<div><b>Ви:</b> ${inp.value}</div>`;
-            win.scrollTop = win.scrollHeight;
-            inp.value = "";
+        function finishGame(win) {
+            if(win) stats.wins++; else stats.loses++;
+            localStorage.setItem('clashStats', JSON.stringify(stats));
+            const t = document.getElementById('toast');
+            t.innerText = win ? "ПЕРЕМОГА! +1" : "ПОРАЗКА!";
+            t.classList.add('show');
+            setTimeout(resetToMenu, 4000);
         }
 
-        function endGame(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.classList.add('show');
-            setTimeout(() => location.reload(), 3000);
+        function resetToMenu() {
+            document.getElementById('toast').classList.remove('show');
+            document.getElementById('game-nav').style.display = 'none';
+            document.getElementById('main-nav').style.display = 'flex';
+            document.getElementById('btn-spy').style.display = 'none';
+            document.getElementById('btn-player').style.display = 'none';
+            updateStatsUI();
+            nav('scr-main', document.querySelector('#main-nav .nav-item'), 'menu');
         }
+
+        function sendMsg() {
+            const inp = document.getElementById('chat-msg'), win = document.getElementById('chat-window');
+            if(inp.value) { win.innerHTML += `<div><b>Ви:</b> ${inp.value}</div>`; inp.value = ""; }
+        }
+
+        updateStatsUI();
     </script>
 </body>
 </html>
