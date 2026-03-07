@@ -24,15 +24,18 @@
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
         .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         input { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #2d3748; background: #111827; color: white; font-size: 18px; text-align: center; outline: none; margin-bottom: 10px; }
 
         .card-display { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; border: 2px solid var(--accent); margin-bottom: 15px; }
+        .unit-img { width: 120px; height: 150px; object-fit: contain; margin-top: 10px; border-radius: 10px; }
         
-        .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; align-items: center; border: 1px solid transparent; }
+        .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; align-items: center; }
         .rank-item.me { background: rgba(245, 158, 11, 0.2); border: 1px solid var(--accent); }
-        .rank-pos { color: var(--accent); font-weight: 900; width: 25px; }
-
+        
+        #chat-window { height: 220px; background: #05070a; overflow-y: auto; padding: 12px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #1a2236; font-size: 14px; display: flex; flex-direction: column; gap: 5px; }
+        .msg { word-break: break-word; line-height: 1.4; border-bottom: 1px solid #111; padding-bottom: 4px; }
         .my-rank-fixed { position: sticky; bottom: -21px; left: -20px; right: -20px; width: calc(100% + 40px); background: #1c2538; padding: 15px 20px; border-top: 2px solid var(--accent); display: flex; justify-content: space-between; font-weight: bold; z-index: 100; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
@@ -46,42 +49,44 @@
 
     <div id="scr-game" class="screen active-screen">
         <div id="menu-area">
-            <h1 style="text-align:center; color:var(--accent); margin-bottom: 20px;">CLASH SPY 🕵️</h1>
+            <h1 style="text-align:center; color:var(--accent);">CLASH SPY 🕵️</h1>
             <button class="btn btn-green" onclick="createLobby()">СТВОРТИ КІМНАТУ</button>
-            <div style="margin-top: 20px;">
+            <div style="margin-top: 20px; border-top: 1px solid #2d3748; padding-top: 15px;">
                 <input type="number" id="lobby-input" placeholder="КОД КІМНАТИ">
                 <button class="btn btn-blue" onclick="joinLobby()">ПРИЄДНАТИСЯ</button>
             </div>
         </div>
 
         <div id="lobby-area" style="display:none; flex-direction:column; height:100%;">
-            <h1 id="room-code-label" style="text-align:center; color:var(--accent); font-size: 42px; margin: 10px 0;">----</h1>
-            <div id="player-list" style="flex:1; background:rgba(0,0,0,0.1); border-radius: 10px; padding: 10px;"></div>
+            <h2 style="text-align:center; margin:0; font-size:12px; opacity:0.6;">КОД КІМНАТИ</h2>
+            <h1 id="room-code-label" style="text-align:center; color:var(--accent); font-size: 42px; margin: 5px 0;">----</h1>
+            <div id="player-list" style="flex:1; margin-bottom: 10px;"></div>
             <button id="start-btn" class="btn btn-blue" onclick="startGame()" style="display:none;">ПОЧАТИ БИТВУ</button>
             <button class="btn btn-red" onclick="location.reload()" style="background:none; box-shadow:none;">ВИЙТИ</button>
         </div>
 
         <div id="play-area" style="display:none;">
             <div class="card-display" id="role-card"></div>
-            <div id="chat-window" style="height:200px; background:#000; overflow-y:auto; padding:10px; margin-bottom:10px; border-radius:10px; font-size: 14px;"></div>
+            <div id="chat-window"></div>
             <div style="display: flex; gap: 5px;">
-                <input type="text" id="chat-input" placeholder="Питання..." style="flex: 1; margin: 0;">
+                <input type="text" id="chat-input" placeholder="Твоє питання..." style="flex: 1; margin: 0;">
                 <button class="btn btn-blue" onclick="sendMsg()" style="width: 60px; margin: 0; padding: 0;">➜</button>
             </div>
+            <button id="finish-btn" class="btn btn-red" onclick="finishGameAction()" style="display:none; margin-top:10px; padding:10px; font-size:12px;">ЗАВЕРШИТИ (HOST)</button>
         </div>
     </div>
 
     <div id="scr-profile" class="screen">
         <h2 style="color:var(--accent)">МІЙ ПРОФІЛЬ</h2>
         <div class="card-display">
-            <h2 id="prof-name">Завантаження...</h2>
+            <h2 id="prof-name">---</h2>
             <div style="font-size: 48px;">🏆 <span id="prof-wins">0</span></div>
-            <p style="opacity: 0.6;">Перемог у битвах</p>
+            <p>Перемог у битвах</p>
         </div>
     </div>
 
     <div id="scr-leaderboard" class="screen">
-        <h2 style="color:var(--accent)">ТОП-100 ЛІДЕРІВ</h2>
+        <h2 style="color:var(--accent)">ТОП-100 ГРАВЦІВ</h2>
         <div id="rank-list">Завантаження...</div>
     </div>
 
@@ -89,7 +94,6 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ВИПРАВЛЕНО: Адреса з урахуванням регіону (Belgium)
     const firebaseConfig = { 
         databaseURL: "https://carvain7-48b13-default-rtdb.europe-west1.firebasedatabase.app/" 
     };
@@ -99,12 +103,25 @@
 
     const user = tg.initDataUnsafe?.user;
     const uID = (user?.id || "dev_" + Math.floor(Math.random()*999)).toString();
-    const uName = user?.first_name || user?.username || "Боєць";
+    const uName = user?.first_name || user?.username || "Гравець";
     
-    // Реєструємо гравця за унікальним ID
+    let roomID = null;
+    let isHost = false;
+
+    // Масив карт
+    const clashCards = [
+        { n: "П.Е.К.К.А", i: "https://vignette.wikia.nocookie.net/clashroyale/images/7/7b/P.E.K.K.A.png" },
+        { n: "Мегалицар", i: "https://vignette.wikia.nocookie.net/clashroyale/images/6/6d/MegaKnightCard.png" },
+        { n: "Вершник на кабані", i: "https://vignette.wikia.nocookie.net/clashroyale/images/a/a5/HogRidderCard.png" },
+        { n: "Елітні варвари", i: "https://vignette.wikia.nocookie.net/clashroyale/images/c/c5/EliteBarbariansCard.png" },
+        { n: "Спаркі", i: "https://vignette.wikia.nocookie.net/clashroyale/images/3/30/SparkyCard.png" },
+        { n: "Відьма", i: "https://vignette.wikia.nocookie.net/clashroyale/images/a/a2/WitchCard.png" },
+        { n: "Громовержець", i: "https://vignette.wikia.nocookie.net/clashroyale/images/d/d4/ElectroWizardCard.png" },
+        { n: "Магічний лучник", i: "https://vignette.wikia.nocookie.net/clashroyale/images/0/0a/MagicArcherCard.png" }
+    ];
+
     db.ref('users/' + uID).update({ name: uName });
 
-    // Слухаємо дані профілю
     db.ref('users/' + uID).on('value', (snap) => {
         const d = snap.val() || { wins: 0 };
         document.getElementById('prof-name').innerText = uName;
@@ -123,54 +140,37 @@
         db.ref('users').once('value', (snap) => {
             const list = document.getElementById('rank-list');
             list.innerHTML = "";
+            let players = [];
+            let unique = new Map();
+            snap.forEach(c => unique.set(c.key, c.val()));
             
-            let uniquePlayers = {};
-            snap.forEach(child => {
-                const p = child.val();
-                // Гарантуємо, що кожний uID зустрічається лише один раз
-                uniquePlayers[child.key] = {
-                    name: p.name || "Боєць",
-                    wins: p.wins || 0,
-                    id: child.key
-                };
-            });
+            players = Array.from(unique.entries()).map(([id, data]) => ({ id, ...data }));
+            players.sort((a, b) => (b.wins || 0) - (a.wins || 0));
 
-            let playersArray = Object.values(uniquePlayers);
-            playersArray.sort((a, b) => b.wins - a.wins);
-
-            const myIndex = playersArray.findIndex(p => p.id === uID);
-            const top100 = playersArray.slice(0, 100);
-            
-            let html = "";
-            top100.forEach((p, i) => {
-                let isMeClass = p.id === uID ? "me" : "";
-                let medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
-                html += `
-                    <div class="rank-item ${isMeClass}">
-                        <span><span class="rank-pos">${i+1}</span> ${medal} ${p.name}</span>
-                        <span style="color:var(--accent); font-weight:bold;">🏆 ${p.wins}</span>
+            players.slice(0, 100).forEach((p, i) => {
+                let isMe = p.id === uID ? "me" : "";
+                list.innerHTML += `
+                    <div class="rank-item ${isMe}">
+                        <span><b>${i+1}.</b> ${p.name}</span>
+                        <span style="color:var(--accent)">🏆 ${p.wins || 0}</span>
                     </div>`;
             });
-
-            if (myIndex !== -1) {
-                html += `
+            
+            const myIdx = players.findIndex(p => p.id === uID);
+            if(myIdx !== -1) {
+                list.innerHTML += `
                     <div class="my-rank-fixed">
-                        <span>Твоє місце: <span style="color:var(--accent)">#${myIndex + 1}</span></span>
-                        <span>🏆 ${playersArray[myIndex].wins}</span>
+                        <span>Місце: #${myIdx+1}</span>
+                        <span>🏆 ${players[myIdx].wins || 0}</span>
                     </div>`;
             }
-            list.innerHTML = html;
         });
     }
-
-    // ЛОГІКА КІМНАТ
-    let roomID = null;
-    let isHost = false;
 
     async function createLobby() {
         roomID = Math.floor(1000 + Math.random() * 8999).toString();
         isHost = true;
-        await db.ref('rooms/' + roomID).set({ host: uID, status: 'lobby' });
+        await db.ref('rooms/' + roomID).set({ host: uID, status: 'lobby', createdAt: Date.now() });
         setupRoom();
     }
 
@@ -178,7 +178,7 @@
         const val = document.getElementById('lobby-input').value;
         if(!val) return alert("Введіть код!");
         const snap = await db.ref('rooms/' + val).once('value');
-        if(!snap.exists()) return alert("Кімнату не знайдено!");
+        if(!snap.exists()) return alert("Кімната не існує!");
         roomID = val; isHost = false;
         setupRoom();
     }
@@ -188,31 +188,100 @@
         document.getElementById('lobby-area').style.display = 'flex';
         document.getElementById('room-code-label').innerText = roomID;
         
-        db.ref('rooms/' + roomID + '/players/' + uID).set({ name: uName });
-        
-        db.ref('rooms/' + roomID + '/players').on('value', (snap) => {
+        const roomRef = db.ref('rooms/' + roomID);
+        roomRef.child('players/' + uID).set({ name: uName });
+
+        // Оновлення черги гравців
+        roomRef.child('players').on('value', (snap) => {
             const list = document.getElementById('player-list');
             list.innerHTML = "";
+            let count = 0;
             snap.forEach(p => {
-                list.innerHTML += `<div class="rank-item">👤 ${p.val().name}</div>`;
+                count++;
+                list.innerHTML += `<div class="rank-item">👤 ${p.val().name} <span style="color:var(--green); font-size:10px;">• ONLINE</span></div>`;
             });
-            if(isHost) document.getElementById('start-btn').style.display = 'block';
+            if(isHost) {
+                const sBtn = document.getElementById('start-btn');
+                sBtn.style.display = 'block';
+                sBtn.disabled = count < 2;
+                sBtn.innerText = count < 2 ? "ОЧІКУВАННЯ (МИН. 2)" : "ПОЧАТИ БИТВУ";
+            }
         });
 
-        db.ref('rooms/' + roomID + '/status').on('value', (snap) => {
-            if(snap.val() === 'started') startPlayPhase();
+        // Слухаємо старт гри
+        roomRef.on('value', (snap) => {
+            const data = snap.val();
+            if(data && data.status === 'started') renderGame(data);
         });
     }
 
     function startGame() {
-        db.ref('rooms/' + roomID).update({ status: 'started' });
+        const card = clashCards[Math.floor(Math.random()*clashCards.length)];
+        db.ref('rooms/' + roomID + '/players').once('value', (snap) => {
+            let ids = []; snap.forEach(p => ids.push(p.key));
+            const spy = ids[Math.floor(Math.random()*ids.length)];
+            db.ref('rooms/' + roomID).update({ 
+                status: 'started', 
+                spyID: spy, 
+                cardName: card.n, 
+                cardImg: card.i 
+            });
+        });
     }
 
-    function startPlayPhase() {
+    function renderGame(data) {
         document.getElementById('lobby-area').style.display = 'none';
-        document.getElementById('play-area').style.display = 'block';
-        // Тут можна додати логіку видачі карт
-        document.getElementById('role-card').innerHTML = "<h2>Гра почалася!</h2>";
+        document.getElementById('play-area').style.display = 'flex';
+        
+        const isSpy = data.spyID === uID;
+        const cardBox = document.getElementById('role-card');
+        
+        if(isSpy) {
+            cardBox.innerHTML = `<h2 style="color:var(--red); margin:0;">ТИ ШПИГУН 🕵️</h2><p style="opacity:0.7">Твоя мета: вгадати карту по питанням!</p>`;
+        } else {
+            cardBox.innerHTML = `
+                <p style="font-size:12px; margin:0; opacity:0.6;">ВАША КАРТА:</p>
+                <h2 style="color:var(--green); margin:5px 0;">${data.cardName}</h2>
+                <img src="${data.cardImg}" class="unit-img">`;
+        }
+        
+        if(isHost) document.getElementById('finish-btn').style.display = 'block';
+
+        // ЧАТ
+        const chatRef = db.ref('rooms/' + roomID + '/chat');
+        chatRef.off(); // Важливо: уникаємо дублів слухача
+        chatRef.on('child_added', (snap) => {
+            const m = snap.val();
+            const win = document.getElementById('chat-window');
+            win.innerHTML += `<div class="msg"><b>${m.u}:</b> ${m.msg}</div>`;
+            win.scrollTop = win.scrollHeight;
+        });
+    }
+
+    function sendMsg() {
+        const inp = document.getElementById('chat-input');
+        if(!inp.value.trim()) return;
+        db.ref('rooms/' + roomID + '/chat').push({ u: uName, msg: inp.value });
+        inp.value = "";
+    }
+
+    async function finishGameAction() {
+        const winner = prompt("Введіть ім'я переможця (гравця чи шпигуна):");
+        if(!winner) return;
+        
+        const pSnap = await db.ref('rooms/' + roomID + '/players').once('value');
+        let foundID = null;
+        pSnap.forEach(p => {
+            if(p.val().name.toLowerCase() === winner.toLowerCase()) foundID = p.key;
+        });
+
+        if(foundID) {
+            db.ref('users/' + foundID + '/wins').transaction(c => (c || 0) + 1);
+            alert("Нагороджено 1 🏆!");
+        } else {
+            alert("Гравця не знайдено.");
+        }
+        db.ref('rooms/' + roomID).remove().then(() => location.reload());
     }
 </script>
 </body>
