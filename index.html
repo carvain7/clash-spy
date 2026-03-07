@@ -57,146 +57,156 @@
     </div>
 
 <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand(); // Розгорнути на весь екран
+  const tg = window.Telegram.WebApp;
+tg.expand();
 
-    const firebaseConfig = { databaseURL: "https://clashspy-multi-default-rtdb.firebaseio.com/" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+const firebaseConfig = { databaseURL: "https://clashspy-multi-default-rtdb.firebaseio.com/" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    // Отримуємо ім'я з Telegram
-    let myName = tg.initDataUnsafe?.user?.first_name || "Гравець_" + Math.floor(Math.random()*99);
-    document.getElementById('user-name').innerText = myName;
+let myName = tg.initDataUnsafe?.user?.first_name || "Гравець_" + Math.floor(Math.random()*99);
+document.getElementById('user-name').innerText = myName;
 
-    let roomID = null;
-    let isHost = false;
-    let myKey = null; // Ключ гравця в списку
+let roomID = null;
+let isHost = false;
+let myKey = null;
 
-    function nav(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+// Функція навігації
+function nav(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// 1. СТВОРЕННЯ КІМНАТИ
+async function createLobby() {
+    roomID = Math.floor(1000 + Math.random() * 8999).toString();
+    isHost = true;
+    
+    // Очищуємо стару гілку гри, якщо вона раптом була
+    await db.ref('rooms/' + roomID).remove(); 
+    
+    setupRoom();
+    document.getElementById('start-btn').style.display = 'block';
+}
+
+// 2. ПРИЄДНАННЯ
+async function joinLobby() {
+    const input = document.getElementById('lobby-input').value;
+    if(input.length !== 4) return alert("Введіть 4 цифри!");
+    
+    roomID = input;
+    const snapshot = await db.ref('rooms/' + roomID).once('value');
+    
+    if(!snapshot.exists()) {
+        alert("Кімнату не знайдено! Перевірте код.");
+        return;
     }
+    
+    isHost = false;
+    document.getElementById('start-btn').style.display = 'none';
+    setupRoom();
+}
 
-    async function createLobby() {
-        roomID = Math.floor(1000 + Math.random() * 8999).toString();
-        isHost = true;
-        await setupRoom();
-        document.getElementById('start-btn').style.display = 'block';
-    }
+// 3. НАЛАШТУВАННЯ СИНХРОНІЗАЦІЇ (Викликається ПІСЛЯ того як roomID отримано)
+function setupRoom() {
+    document.getElementById('room-code-label').innerText = roomID;
+    nav('scr-lobby');
 
-    async function joinLobby() {
-        roomID = document.getElementById('lobby-input').value;
-        if(roomID.length !== 4) return alert("Код має бути з 4 цифр!");
-        isHost = false;
-        
-        // Перевірка чи існує кімната
-        const snapshot = await db.ref('rooms/' + roomID).once('value');
-        if(!snapshot.exists()) return alert("Кімнату не знайдено!");
-        
-        setupRoom();
-    }
+    const roomRef = db.ref('rooms/' + roomID);
+    
+    // Реєструємо себе
+    const playerRef = roomRef.child('players').push({ name: myName });
+    myKey = playerRef.key;
+    playerRef.onDisconnect().remove();
 
-    function setupRoom() {
-        document.getElementById('room-code-label').innerText = roomID;
-        nav('scr-lobby');
-
-        const roomRef = db.ref('rooms/' + roomID);
-        
-        // Додаємо себе в список (push генерує унікальний ID для кожного гравця)
-        const playerRef = roomRef.child('players').push({ name: myName });
-        myKey = playerRef.key;
-        playerRef.onDisconnect().remove();
-
-        // СЛУХАЄМО СПИСОК ГРАВЦІВ
-        roomRef.child('players').on('value', (snapshot) => {
-            const players = snapshot.val();
-            const listDiv = document.getElementById('player-list');
-            listDiv.innerHTML = "";
-            let count = 0;
-            if (players) {
-                Object.values(players).forEach(p => {
-                    count++;
-                    listDiv.innerHTML += `<div class="player-item">👤 ${p.name} <span>READY</span></div>`;
-                });
-            }
-            
-            if (isHost) {
-                document.getElementById('start-btn').disabled = count < 3;
-                document.getElementById('lobby-msg').innerText = count < 3 ? `Треба ще ${3-count} гравців` : "Можна починати!";
-            }
-        });
-
-        // СЛУХАЄМО ПОЧАТОК ГРИ
-        roomRef.child('game').on('value', (snapshot) => {
-            const game = snapshot.val();
-            if (game && game.status === 'started') {
-                startActualGame(game);
-            }
-        });
-    }
-
-    function startGame() {
-        const cards = ["П.Е.К.К.А", "Мегалицар", "Вершник на кабані", "Спаркі", "Принцеса", "Магічний лучник"];
-        const selectedCard = cards[Math.floor(Math.random() * cards.length)];
-        
-        db.ref('rooms/' + roomID + '/players').once('value', (snap) => {
-            const players = [];
-            snap.forEach(child => { players.push(child.val().name); });
-            const spy = players[Math.floor(Math.random() * players.length)];
-
-            db.ref('rooms/' + roomID + '/game').set({
-                status: 'started',
-                spy: spy,
-                card: selectedCard,
-                startTime: Date.now()
+    // Слухаємо гравців
+    roomRef.child('players').on('value', (snapshot) => {
+        const players = snapshot.val();
+        const listDiv = document.getElementById('player-list');
+        listDiv.innerHTML = "";
+        let count = 0;
+        if (players) {
+            Object.values(players).forEach(p => {
+                count++;
+                listDiv.innerHTML += `<div class="player-item">👤 ${p.name} <span style="color:var(--green)">●</span></div>`;
             });
-        });
-    }
-
-    function startActualGame(game) {
-        nav('scr-game');
-        const isSpy = game.spy === myName;
+        }
         
-        // Повідомлення про роль
-        const startMsg = isSpy ? "🕵️ ТИ ШПИГУН! Вгадай карту." : "🛡️ КАРТА: " + game.card;
-        document.getElementById('chat-window').innerHTML = `<div style="color:var(--accent); text-align:center; padding:10px;">${startMsg}</div>`;
-        
-        startTimer(300); // 5 хвилин
-    }
-
-    function startTimer(seconds) {
-        const display = document.getElementById('timer');
-        let timer = seconds;
-        const interval = setInterval(() => {
-            let mins = Math.floor(timer / 60);
-            let secs = timer % 60;
-            display.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            if (--timer < 0) {
-                clearInterval(interval);
-                alert("Час вийшов!");
-            }
-        }, 1000);
-    }
-
-    function sendMsg() {
-        const inp = document.getElementById('chat-input');
-        if(!inp.value) return;
-        db.ref('rooms/' + roomID + '/chat').push({ user: myName, msg: inp.value });
-        inp.value = "";
-    }
-
-    // Слухаємо чат окремо
-    db.ref('rooms/' + roomID + '/chat').on('child_added', (snap) => {
-        const m = snap.val();
-        const win = document.getElementById('chat-window');
-        win.innerHTML += `<div><b>${m.user}:</b> ${m.msg}</div>`;
-        win.scrollTop = win.scrollHeight;
+        if (isHost) {
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = count < 3;
+            document.getElementById('lobby-msg').innerText = count < 3 ? `Очікуємо гравців (${count}/3)` : "Можна починати!";
+        } else {
+            document.getElementById('lobby-msg').innerText = "Чекайте, поки Хост запустить арену...";
+        }
     });
 
-    function leaveRoom() {
-        if(myKey) db.ref('rooms/' + roomID + '/players/' + myKey).remove();
-        location.reload();
+    // Слухаємо старт гри
+    roomRef.child('game').on('value', (snapshot) => {
+        const game = snapshot.val();
+        if (game && game.status === 'started') {
+            startActualGame(game);
+        }
+    });
+
+    // Слухаємо чат (тільки ПІСЛЯ вибору кімнати)
+    roomRef.child('chat').off(); // Скидаємо старі слухачі
+    roomRef.child('chat').on('child_added', (snap) => {
+        const m = snap.val();
+        const win = document.getElementById('chat-window');
+        const isMe = m.user === myName;
+        win.innerHTML += `<div style="margin-bottom:5px; text-align:${isMe ? 'right' : 'left'}">
+            <small style="color:#64748b">${m.user}</small><br>
+            <span style="display:inline-block; background:${isMe ? 'var(--blue)' : 'var(--card)'}; padding:8px 12px; border-radius:10px;">${m.msg}</span>
+        </div>`;
+        win.scrollTop = win.scrollHeight;
+    });
+}
+
+// 4. ЗАПУСК ГРИ (Тільки для Хоста)
+function startGame() {
+    const cards = ["П.Е.К.К.А", "Мегалицар", "Вершник на кабані", "Спаркі", "Принцеса", "Магічний лучник", "Елітний варвар"];
+    const selectedCard = cards[Math.floor(Math.random() * cards.length)];
+    
+    db.ref('rooms/' + roomID + '/players').once('value', (snap) => {
+        const players = [];
+        snap.forEach(child => { players.push(child.val().name); });
+        const spy = players[Math.floor(Math.random() * players.length)];
+
+        db.ref('rooms/' + roomID + '/game').set({
+            status: 'started',
+            spy: spy,
+            card: selectedCard
+        });
+    });
+}
+
+function startActualGame(game) {
+    nav('scr-game');
+    const isSpy = game.spy === myName;
+    const infoBox = document.createElement('div');
+    infoBox.style = "background:var(--card); padding:15px; border-radius:12px; text-align:center; margin-bottom:10px; border: 2px solid var(--accent)";
+    
+    if(isSpy) {
+        infoBox.innerHTML = `<h3 style="margin:0; color:var(--red)">🕵️ ТИ ШПИГУН</h3><p>Твоя мета: вгадати карту за розмовами!</p>`;
+    } else {
+        infoBox.innerHTML = `<h3 style="margin:0; color:var(--green)">🛡️ ТИ ГРАВЕЦЬ</h3><p>Карта: <b>${game.card}</b></p>`;
     }
+    document.getElementById('chat-window').prepend(infoBox);
+}
+
+function sendMsg() {
+    const inp = document.getElementById('chat-input');
+    if(!inp.value.trim()) return;
+    db.ref('rooms/' + roomID + '/chat').push({ user: myName, msg: inp.value });
+    inp.value = "";
+}
+
+function leaveRoom() {
+    if(myKey && roomID) db.ref('rooms/' + roomID + '/players/' + myKey).remove();
+    location.reload();
+}
 </script>
 </body>
 </html>
+
