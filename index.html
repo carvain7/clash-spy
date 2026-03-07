@@ -3,103 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy - Pro Stats</title>
+    <title>Clash Spy - Full Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 0; overflow: hidden; }
         
-        /* Навігація - Фіксоване центрування */
-        .nav-bar { 
-            position: fixed; bottom: 0; width: 100%; height: 65px; 
-            background: #1a2236; display: flex; align-items: center; 
-            justify-content: center; border-top: 1px solid #334155; z-index: 100; 
-        }
-        .nav-item { 
-            font-size: 26px; width: 80px; text-align: center; 
-            cursor: pointer; transition: 0.2s; color: #64748b;
-        }
-        .nav-item.active { color: var(--accent); transform: scale(1.1); }
+        /* Navigation - Perfect Centering */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 65px; background: #1a2236; display: flex; align-items: center; justify-content: center; border-top: 1px solid #334155; z-index: 100; }
+        .nav-item { font-size: 26px; width: 33%; text-align: center; cursor: pointer; color: #64748b; line-height: 65px; }
+        .nav-item.active { color: var(--accent); }
 
         .screen { display: none; height: calc(100vh - 65px); width: 100%; flex-direction: column; overflow-y: auto; }
         .active { display: flex; }
 
         .container { padding: 20px; text-align: center; }
-        .btn { background: var(--blue); color: white; border: none; padding: 16px; border-radius: 12px; width: 100%; font-weight: bold; margin: 8px 0; cursor: pointer; }
+        .btn { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; margin: 8px 0; cursor: pointer; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* Прогрес-бар */
-        .progress-container { background: #0f172a; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; border: 1px solid #334155; }
-        #progress-fill { background: var(--green); height: 100%; width: 0%; transition: 0.5s; }
-
-        #role-announcer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        /* Stats & Cards */
+        .card-box { background: #1e293b; border: 1px solid var(--accent); border-radius: 15px; padding: 20px; text-align: left; position: relative; }
+        .stat-row { display: flex; justify-content: space-between; margin: 8px 0; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+        
+        /* UI Elements */
         #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 15px; border-radius: 12px; font-weight: bold; z-index: 3000; transition: 0.5s; width: 80%; text-align: center; }
         #toast.show { top: 20px; }
-
-        #chat-window { background: #020617; flex: 1; border-radius: 10px; overflow-y: auto; padding: 15px; margin: 10px 0; text-align: left; border: 1px solid #1e293b; }
-        .card-box { background: #1e293b; border: 1px solid var(--accent); border-radius: 15px; padding: 20px; text-align: left; }
+        #role-announcer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        
+        .timer-panel { background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border-left: 4px solid var(--blue); }
+        #chat-window { background: #020617; flex: 1; border-radius: 10px; overflow-y: auto; padding: 15px; margin-bottom: 10px; text-align: left; border: 1px solid #1e293b; }
+        
+        .progress-bar { background: #0f172a; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        #progress-fill { background: var(--green); height: 100%; width: 0%; transition: 0.5s; }
     </style>
 </head>
 <body>
 
     <div id="role-announcer"><h1 id="role-text">ГОТУЙСЯ...</h1></div>
-    <div id="toast">Результат</div>
+    <div id="toast">Повідомлення</div>
 
     <div id="scr-main" class="screen active">
         <div class="container">
             <h1 style="color:var(--accent); margin-top:30px;">CLASH SPY</h1>
-            <button class="btn" onclick="openLobby(true)" style="background:var(--green)">Створити гру</button>
+            <button class="btn" onclick="openLobby(true)" style="background:var(--green)">СТВОРІТЬ КІМНАТУ</button>
             <input type="text" id="join-code" placeholder="Код..." style="width:80%; padding:15px; border-radius:10px; border:none; text-align:center; background:#1e293b; color:white; margin:10px 0;">
-            <button class="btn" onclick="openLobby(false)" style="background:var(--accent); color:black;">Приєднатися</button>
+            <button class="btn" onclick="openLobby(false)" style="background:var(--accent); color:black;">ПРИЄДНАТИСЯ</button>
         </div>
     </div>
 
     <div id="scr-profile" class="screen">
         <div class="container">
-            <h2>Твій Профіль</h2>
+            <h2>Профіль</h2>
             <div class="card-box">
-                <p>🏆 Перемог: <span id="stat-wins">0</span></p>
-                <p>💀 Поразок: <span id="stat-loses">0</span></p>
-                <p>📊 КД: <span id="stat-kd">0.00</span></p>
-                <hr style="opacity:0.1">
-                <p>🎖️ Ранг: <b id="stat-rank" style="color:var(--accent)">Новачок</b></p>
-                <div class="progress-container"><div id="progress-fill"></div></div>
-                <p id="next-rank-info" style="font-size:12px; color:#64748b">Ще 5 до Воїна</p>
+                <p>🏆 Перемог: <span id="stat-wins">0</span> | 💀 Поразок: <span id="stat-loses">0</span></p>
+                <p>📊 KD: <span id="stat-kd">0.00</span></p>
+                <p>🎖️ Ранг: <b id="stat-rank">Новачок</b></p>
+                <div class="progress-bar"><div id="progress-fill"></div></div>
+                <small id="next-rank-info" style="color:#64748b"></small>
             </div>
         </div>
     </div>
 
     <div id="scr-lobby" class="screen">
         <div class="container">
-            <h1>ЛОБІ: <span id="room-id" style="color:var(--accent)">-</span></h1>
-            <div class="card-box">👤 Ви (Host) ✅</div>
-            <button class="btn" onclick="runGame()" style="background:var(--blue); margin-top:20px;">ПОЧАТИ</button>
-            <button class="btn" onclick="resetToMenu()" style="background:none; color:var(--red);">Вийти</button>
+            <h1>КІМНАТА: <span id="room-id" style="color:var(--accent)">-</span></h1>
+            <div class="card-box">👤 Ви (Організатор) ✅</div>
+            <button class="btn" onclick="runGame()" style="background:var(--blue); margin-top:20px;">ПОЧАТИ ГРУ (5 ХВ)</button>
+            <button class="btn" onclick="location.reload()" style="background:none; color:var(--red);">Вийти</button>
         </div>
     </div>
 
     <div id="scr-game" class="screen">
         <div class="container" style="display:flex; flex-direction:column; height:100%;">
+            <div class="timer-panel">
+                ⏳ Час: <b id="timer" style="color:var(--red)">05:00</b> | 
+                🎤 <span id="turn-info" style="color:var(--green)">Ваша черга</span>
+            </div>
             <div id="chat-window"></div>
             <div id="game-actions">
-                <button id="btn-spy" class="btn" onclick="nav('scr-guess',null,'game')" style="display:none; background:var(--accent); color:black;">🎯 ВГАДАТИ</button>
-                <button id="btn-player" class="btn" onclick="nav('scr-vote',null,'game')" style="display:none; background:var(--red);">🚫 ВИКРИТИ</button>
+                <button id="btn-spy" class="btn" onclick="nav('scr-guess',null,'game')" style="display:none; background:var(--accent); color:black;">🎯 ВГАДАТИ КАРТУ</button>
+                <button id="btn-player" class="btn" onclick="nav('scr-vote',null,'game')" style="display:none; background:var(--red);">🚫 ВИКРИТИ ШПИГУНА</button>
             </div>
-            <div style="display:flex; gap:10px; padding-bottom:10px;">
+            <div style="display:flex; gap:10px; padding-bottom:5px;">
                 <input type="text" id="chat-msg" placeholder="Текст..." style="flex:1; padding:12px; border-radius:10px; border:none; background:#1e293b; color:white;">
-                <button class="btn" onclick="sendMsg()" style="width:50px; margin:0;">➜</button>
+                <button class="btn" id="send-btn" onclick="sendMsg()" style="width:55px; margin:0;">➜</button>
             </div>
         </div>
     </div>
 
     <div id="scr-card" class="screen">
-        <div class="container"><h1>КАРТА</h1><div id="card-content"></div></div>
+        <div class="container">
+            <h1 id="card-title">ВАША КАРТА</h1>
+            <div id="card-stats-display"></div>
+        </div>
     </div>
 
     <div id="scr-guess" class="screen">
-        <div class="container"><h3>ЯКА КАРТА?</h3><div id="guess-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div></div>
+        <div class="container"><h3>ОБЕРІТЬ КАРТУ</h3><div id="guess-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div><button class="btn" onclick="nav('scr-game',null,'game')" style="background:none; border:1px solid #334155;">Назад</button></div>
     </div>
     <div id="scr-vote" class="screen">
-        <div class="container"><h3>ХТО ШПИГУН?</h3><button class="btn" onclick="finishGame(true)">👤 Player_2</button></div>
+        <div class="container"><h3>ХТО ШПИГУН?</h3><button class="btn" onclick="finishGame(true)">👤 Player_2</button><button class="btn" onclick="nav('scr-game',null,'game')" style="background:none; border:1px solid #334155;">Назад</button></div>
     </div>
 
     <nav class="nav-bar" id="main-nav">
@@ -115,26 +118,30 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let stats = JSON.parse(localStorage.getItem('clashStats')) || { wins: 0, loses: 0 };
-        const cards = [{n:"П.Е.К.К.А",hp:3450},{n:"Мегалицар",hp:3300},{n:"Спаркі",hp:1200}];
-        let isSpy = false;
+        let stats = JSON.parse(localStorage.getItem('clashSpyStats')) || { wins: 0, loses: 0 };
+        const cards = [
+            {n: "П.Е.К.К.А", hp: 3450, dmg: 678, spd: "Повільна", rar: "Епічна"},
+            {n: "Мегалицар", hp: 3300, dmg: 222, spd: "Середня", rar: "Легендарна"},
+            {n: "Спаркі", hp: 1200, dmg: 1100, spd: "Повільна", rar: "Легендарна"}
+        ];
 
-        function updateStatsUI() {
+        let isSpy = false, myCard = null, timeLeft = 300, timerInt = null, canSend = true;
+
+        function updateProfile() {
             const kd = stats.wins / (stats.loses || 1);
             document.getElementById('stat-wins').innerText = stats.wins;
             document.getElementById('stat-loses').innerText = stats.loses;
             document.getElementById('stat-kd').innerText = kd.toFixed(2);
             
-            let rank = "Новачок", next = 5, color = "#fff";
-            if(stats.wins >= 30) { rank = "Легенда"; next = 100; color="#ef4444"; }
-            else if(stats.wins >= 15) { rank = "Мастер"; next = 30; color="#3b82f6"; }
-            else if(stats.wins >= 5) { rank = "Воїн"; next = 15; color="#10b981"; }
+            let r = "Новачок", nxt = 5, clr = "#fff";
+            if(stats.wins >= 30) { r="Легенда"; nxt=100; clr="#ef4444"; }
+            else if(stats.wins >= 15) { r="Мастер"; nxt=30; clr="#3b82f6"; }
+            else if(stats.wins >= 5) { r="Воїн"; nxt=15; clr="#10b981"; }
             
-            document.getElementById('stat-rank').innerText = rank;
-            document.getElementById('stat-rank').style.color = color;
-            const progress = (stats.wins / next) * 100;
-            document.getElementById('progress-fill').style.width = progress + "%";
-            document.getElementById('next-rank-info').innerText = `До наступного рангу: ${next - stats.wins} перемог`;
+            document.getElementById('stat-rank').innerText = r;
+            document.getElementById('stat-rank').style.color = clr;
+            document.getElementById('progress-fill').style.width = (stats.wins/nxt*100) + "%";
+            document.getElementById('next-rank-info').innerText = `Ще ${nxt - stats.wins} перемог до нового рангу`;
         }
 
         function nav(id, el, type) {
@@ -147,53 +154,92 @@
 
         function openLobby(isNew) {
             document.getElementById('main-nav').style.display = 'none';
-            document.getElementById('room-id').innerText = isNew ? "AX72" : "JOINED";
+            document.getElementById('room-id').innerText = isNew ? "RQ82" : document.getElementById('join-code').value || "JOINED";
             nav('scr-lobby');
         }
 
         function runGame() {
             isSpy = Math.random() < 0.3;
+            myCard = cards[Math.floor(Math.random()*cards.length)];
             const ann = document.getElementById('role-announcer');
             ann.style.display = 'flex';
             document.getElementById('role-text').innerText = isSpy ? "ТИ — ШПИГУН 🕵️" : "ТИ — ГРАВЕЦЬ 🛡️";
-            
+            document.getElementById('role-text').style.color = isSpy ? "var(--red)" : "var(--green)";
+
             setTimeout(() => {
                 ann.style.display = 'none';
                 document.getElementById('game-nav').style.display = 'flex';
                 document.getElementById(isSpy ? 'btn-spy' : 'btn-player').style.display = 'block';
-                document.getElementById('card-content').innerHTML = isSpy ? "Вгадай карту!" : "Твоя карта: " + cards[0].n;
+                
+                // Рендер карти
+                const cardDiv = document.getElementById('card-stats-display');
                 if(isSpy) {
-                    document.getElementById('guess-grid').innerHTML = cards.map(c => `<button class="btn" onclick="finishGame(${c.n==='П.Е.К.К.А'})">${c.n}</button>`).join('');
+                    document.getElementById('card-title').innerText = "МЕТА ШПИГУНА";
+                    cardDiv.innerHTML = `<div class="card-box">Вгадай карту гравців, щоб перемогти!</div>`;
+                    document.getElementById('guess-grid').innerHTML = cards.map(c => `<button class="btn" onclick="finishGame(${c.n === myCard.n})">${c.n}</button>`).join('');
+                } else {
+                    document.getElementById('card-title').innerText = "ВАША КАРТА";
+                    cardDiv.innerHTML = `
+                        <div class="card-box">
+                            <h2 style="color:var(--accent)">${myCard.n}</h2>
+                            <div class="stat-row"><span>❤️ HP</span><b>${myCard.hp}</b></div>
+                            <div class="stat-row"><span>⚔️ Урон</span><b>${myCard.dmg}</b></div>
+                            <div class="stat-row"><span>⚡ Швидкість</span><b>${myCard.spd}</b></div>
+                            <div class="stat-row"><span>💎 Рідкість</span><b>${myCard.rar}</b></div>
+                        </div>`;
                 }
                 nav('scr-game', document.querySelector('#game-nav .nav-item'), 'game');
+                startTimer();
             }, 3000);
         }
 
-        function finishGame(win) {
-            if(win) stats.wins++; else stats.loses++;
-            localStorage.setItem('clashStats', JSON.stringify(stats));
-            const t = document.getElementById('toast');
-            t.innerText = win ? "ПЕРЕМОГА! +1" : "ПОРАЗКА!";
-            t.classList.add('show');
-            setTimeout(resetToMenu, 4000);
-        }
-
-        function resetToMenu() {
-            document.getElementById('toast').classList.remove('show');
-            document.getElementById('game-nav').style.display = 'none';
-            document.getElementById('main-nav').style.display = 'flex';
-            document.getElementById('btn-spy').style.display = 'none';
-            document.getElementById('btn-player').style.display = 'none';
-            updateStatsUI();
-            nav('scr-main', document.querySelector('#main-nav .nav-item'), 'menu');
+        function startTimer() {
+            timeLeft = 300;
+            timerInt = setInterval(() => {
+                let m = Math.floor(timeLeft/60), s = timeLeft%60;
+                document.getElementById('timer').innerText = `${m}:${s<10?'0'+s:s}`;
+                if(timeLeft <= 0) { clearInterval(timerInt); finishGame(false); }
+                timeLeft--;
+            }, 1000);
         }
 
         function sendMsg() {
+            if(!canSend) return;
             const inp = document.getElementById('chat-msg'), win = document.getElementById('chat-window');
-            if(inp.value) { win.innerHTML += `<div><b>Ви:</b> ${inp.value}</div>`; inp.value = ""; }
+            if(!inp.value) return;
+            
+            win.innerHTML += `<div><b>Ви:</b> ${inp.value}</div>`;
+            win.scrollTop = win.scrollHeight;
+            inp.value = "";
+            
+            // Блокування черги
+            canSend = false;
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('turn-info').innerText = "Чекайте...";
+            document.getElementById('turn-info').style.color = "#64748b";
+            
+            setTimeout(() => {
+                canSend = true;
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('turn-info').innerText = "Ваша черга";
+                document.getElementById('turn-info').style.color = "var(--green)";
+            }, 4000);
         }
 
-        updateStatsUI();
+        function finishGame(win) {
+            clearInterval(timerInt);
+            if(win) stats.wins++; else stats.loses++;
+            localStorage.setItem('clashSpyStats', JSON.stringify(stats));
+            const t = document.getElementById('toast');
+            t.innerText = win ? "🎉 ПЕРЕМОГА! +1" : "❌ ПОРАЗКА!";
+            t.classList.add('show');
+            setTimeout(() => {
+                t.classList.remove('show');
+                location.reload(); // Повне скидання до меню
+            }, 4000);
+        }
+
+        updateProfile();
     </script>
 </body>
 </html>
