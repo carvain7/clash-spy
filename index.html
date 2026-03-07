@@ -11,24 +11,34 @@
         :root { --bg: #0b101b; --card: #1c2538; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; --text: #e2e8f0; }
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Вкладки */
         .tab-bar { display: flex; background: #161f32; border-bottom: 1px solid #2d3748; }
         .tab { flex: 1; padding: 15px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; opacity: 0.5; transition: 0.3s; }
         .tab.active { opacity: 1; border-bottom: 3px solid var(--accent); color: var(--accent); }
+
         .screen { display: none; height: calc(100vh - 50px); width: 100%; flex-direction: column; padding: 20px; overflow-y: auto; }
         .active-screen { display: flex; }
+
+        /* Елементи інтерфейсу */
         .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; margin: 8px 0; font-size: 16px; color: white; text-transform: uppercase; transition: 0.1s; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
         .btn-blue { background: var(--blue); }
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
         .btn:active { transform: translateY(2px); box-shadow: none; }
-        .btn:disabled { background: #4a5568; box-shadow: none; cursor: not-allowed; }
-        input { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #2d3748; background: #111827; color: white; font-size: 18px; margin-bottom: 10px; text-align: center; }
+        .btn:disabled { background: #4a5568; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
+
+        input { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #2d3748; background: #111827; color: white; font-size: 18px; margin-bottom: 10px; text-align: center; outline: none; }
+
         .card-display { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; border: 2px solid var(--accent); margin-bottom: 15px; }
         .unit-img { width: 120px; height: 145px; object-fit: contain; margin-bottom: 10px; border-radius: 10px; }
+        
+        /* Рейтинг */
         .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; align-items: center; }
-        .rank-pos { color: var(--accent); font-weight: 900; width: 30px; }
+        .rank-pos { color: var(--accent); font-weight: 900; width: 35px; display: inline-block; }
+        
         #chat-window { flex: 1; background: #05070a; margin: 10px 0; padding: 12px; overflow-y: auto; border-radius: 12px; border: 1px solid #1a2236; font-size: 14px; }
-        .msg { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; }
+        .msg { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -36,7 +46,7 @@
     <div class="tab-bar" id="main-tabs">
         <div class="tab active" onclick="switchTab('game')">ГРА</div>
         <div class="tab" onclick="switchTab('profile')">ПРОФІЛЬ</div>
-        <div class="tab" onclick="switchTab('leaderboard')">ТОП</div>
+        <div class="tab" onclick="switchTab('leaderboard')">ТОП-100</div>
     </div>
 
     <div id="scr-game" class="screen active-screen">
@@ -75,18 +85,19 @@
             <div style="font-size: 48px;">🏆 <span id="prof-wins">0</span></div>
             <p>Перемог у битвах</p>
         </div>
-        <div style="opacity: 0.5; text-align: center; font-size: 12px;">ID: <span id="prof-id"></span></div>
+        <div style="opacity: 0.5; text-align: center; font-size: 11px;">ID: <span id="prof-id"></span></div>
     </div>
 
     <div id="scr-leaderboard" class="screen">
-        <h2 style="color:var(--accent)">ТОП ГРАВЦІВ</h2>
-        <div id="rank-list"></div>
+        <h2 style="color:var(--accent)">ТОП-100 ГРАВЦІВ</h2>
+        <div id="rank-list">Завантаження...</div>
     </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // КОНФІГУРАЦІЯ
     const firebaseConfig = { 
         databaseURL: "https://carvain7-48b13-default-rtdb.europe-west1.firebasedatabase.app/" 
     };
@@ -94,11 +105,24 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const uID = (tg.initDataUnsafe?.user?.id || "dev_" + Math.floor(Math.random()*999)).toString();
-    const uName = tg.initDataUnsafe?.user?.first_name || "Боєць";
+    // ДАНІ ГРАВЦЯ
+    const user = tg.initDataUnsafe?.user;
+    const uID = (user?.id || "dev_" + Math.floor(Math.random()*999)).toString();
+    const uName = user?.first_name || user?.username || "Гравець";
     
     let roomID = null;
     let isHost = false;
+
+    // Реєстрація/Оновлення гравця (захист від дублів)
+    db.ref('users/' + uID).update({ name: uName });
+
+    // Слухаємо дані профілю
+    db.ref('users/' + uID).on('value', (snap) => {
+        const data = snap.val() || { wins: 0 };
+        document.getElementById('prof-name').innerText = uName;
+        document.getElementById('prof-wins').innerText = data.wins || 0;
+        document.getElementById('prof-id').innerText = uID;
+    });
 
     const clashCards = [
         { n: "П.Е.К.К.А", i: "https://vignette.wikia.nocookie.net/clashroyale/images/7/7b/P.E.K.K.A.png" },
@@ -109,7 +133,8 @@
         { n: "Відьма", i: "https://vignette.wikia.nocookie.net/clashroyale/images/a/a2/WitchCard.png" },
         { n: "Громовержець", i: "https://vignette.wikia.nocookie.net/clashroyale/images/d/d4/ElectroWizardCard.png" },
         { n: "Куля", i: "https://vignette.wikia.nocookie.net/clashroyale/images/0/00/BalloonCard.png" },
-        { n: "Магічний лучник", i: "https://vignette.wikia.nocookie.net/clashroyale/images/0/0a/MagicArcherCard.png" }
+        { n: "Магічний лучник", i: "https://vignette.wikia.nocookie.net/clashroyale/images/0/0a/MagicArcherCard.png" },
+        { n: "Кат", i: "https://vignette.wikia.nocookie.net/clashroyale/images/2/22/ExecutionerCard.png" }
     ];
 
     function switchTab(tabId) {
@@ -120,25 +145,29 @@
         if(tabId === 'leaderboard') loadLeaderboard();
     }
 
-    db.ref('users/' + uID).on('value', (snap) => {
-        const data = snap.val() || { wins: 0, name: uName };
-        if(!snap.exists()) db.ref('users/' + uID).set({ name: uName, wins: 0 });
-        document.getElementById('prof-name').innerText = uName;
-        document.getElementById('prof-wins').innerText = data.wins;
-        document.getElementById('prof-id').innerText = uID;
-    });
-
+    // ТОП-100 БЕЗ ДУБЛІКАТІВ
     function loadLeaderboard() {
-        db.ref('users').orderByChild('wins').limitToLast(10).once('value', (snap) => {
+        db.ref('users').orderByChild('wins').limitToLast(100).once('value', (snap) => {
             const list = document.getElementById('rank-list');
             list.innerHTML = "";
-            let items = [];
-            snap.forEach(child => { items.push(child.val()); });
-            items.reverse().forEach((p, i) => {
+            let players = [];
+            snap.forEach(child => {
+                const p = child.val();
+                if(p.wins > 0) players.push({ name: p.name || "Гравець", wins: p.wins });
+            });
+            players.sort((a,b) => b.wins - a.wins);
+            
+            if(players.length === 0) {
+                list.innerHTML = "<div style='text-align:center; opacity:0.5;'>Битв ще не було...</div>";
+                return;
+            }
+
+            players.forEach((p, i) => {
+                let badge = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
                 list.innerHTML += `
                     <div class="rank-item">
-                        <span><span class="rank-pos">${i+1}</span> ${p.name}</span>
-                        <span style="color:var(--accent)">🏆 ${p.wins}</span>
+                        <span><span class="rank-pos">${i+1}</span> ${badge} ${p.name}</span>
+                        <span style="color:var(--accent); font-weight:bold;">🏆 ${p.wins}</span>
                     </div>`;
             });
         });
@@ -179,7 +208,7 @@
             let c = 0;
             snap.forEach(p => {
                 c++;
-                list.innerHTML += `<div class="rank-item">👤 ${p.val().name} <span style="color:var(--green); font-size:10px;">ГОТОВИЙ</span></div>`;
+                list.innerHTML += `<div class="rank-item"><span>👤 ${p.val().name}</span> <span style="color:var(--green); font-size:10px;">ГОТОВИЙ</span></div>`;
             });
             if(isHost) {
                 const sBtn = document.getElementById('start-btn');
@@ -209,7 +238,7 @@
         const isSpy = data.spyID === uID;
         const disp = document.getElementById('role-card');
         if(isSpy) {
-            disp.innerHTML = `<h2 style="color:var(--red)">ТИ ШПИГУН 🕵️</h2><p style="font-size:14px;">Твоя мета: вгадай карту, не видавши себе!</p>`;
+            disp.innerHTML = `<h2 style="color:var(--red); margin:0;">ТИ ШПИГУН 🕵️</h2><p style="font-size:14px; opacity:0.8;">Дізнайся карту Clash Royale, не видавши себе!</p>`;
         } else {
             disp.innerHTML = `
                 <h3 style="margin:0; font-size:14px; opacity:0.8;">ВАША КАРТА:</h3>
@@ -235,14 +264,17 @@
     }
 
     async function finishGameAction() {
-        const winner = prompt("Ім'я переможця:");
+        const winner = prompt("Введіть ім'я переможця (точно як у списку):");
         if(!winner) return;
         const pSnap = await db.ref('rooms/' + roomID + '/players').once('value');
+        let found = false;
         pSnap.forEach(p => {
             if(p.val().name.toLowerCase() === winner.toLowerCase()) {
                 db.ref('users/' + p.val().id + '/wins').transaction(c => (c || 0) + 1);
+                found = true;
             }
         });
+        if(found) alert("Результат збережено!");
         db.ref('rooms/' + roomID).remove().then(() => location.reload());
     }
 </script>
