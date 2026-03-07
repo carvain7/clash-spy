@@ -3,134 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy Arena</title>
+    <title>Clash Spy Elite</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a2a3a; color: white; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .screen { display: none; width: 100%; max-width: 400px; text-align: center; animation: fadeIn 0.3s; }
-        .active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { font-family: 'Segoe UI', sans-serif; background: #121c26; color: white; margin: 0; padding: 0; overflow: hidden; }
+        .screen { display: none; height: 100vh; width: 100%; flex-direction: column; }
+        .active { display: flex; }
+        
+        /* Навігація знизу */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1a2a3a; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #2980b9; }
+        .nav-item { color: #bdc3c7; font-size: 12px; text-align: center; cursor: pointer; flex: 1; }
+        .nav-item.active { color: #f1c40f; }
 
-        h1 { color: #f1c40f; text-shadow: 2px 2px #000; margin-bottom: 20px; font-size: 28px; }
-        .menu-btn { background: #2980b9; color: white; border: none; padding: 18px; border-radius: 12px; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 12px; cursor: pointer; border-bottom: 4px solid #1a5276; }
-        .menu-btn:active { border-bottom: none; transform: translateY(3px); }
-        .create { background: #27ae60; border-color: #1e8449; }
-        .join { background: #e67e22; border-color: #a0522d; }
+        /* Контент */
+        .content { padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 80px; text-align: center; }
+        h1 { color: #f1c40f; text-shadow: 2px 2px #000; }
+        .menu-btn { background: #2980b9; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-size: 16px; font-weight: bold; margin-bottom: 10px; border-bottom: 4px solid #1a5276; }
         
-        input { width: 90%; padding: 15px; border-radius: 10px; border: none; font-size: 18px; text-align: center; margin-bottom: 15px; background: #ecf0f1; color: #2c3e50; }
-        .card-stats { background: #34495e; border: 3px solid #f1c40f; border-radius: 15px; padding: 20px; margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        /* Чат */
+        #chat-box { background: #0d161f; height: 200px; border-radius: 10px; overflow-y: auto; padding: 10px; text-align: left; margin-bottom: 10px; font-size: 14px; }
+        .msg { margin-bottom: 5px; border-bottom: 1px solid #1a2a3a; padding-bottom: 2px; }
+        .timer { font-size: 24px; color: #e74c3c; font-weight: bold; margin: 10px 0; }
         
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; max-height: 60vh; overflow-y: auto; padding: 5px; }
-        .card-item { background: #ecf0f1; color: #2c3e50; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; border-left: 5px solid #2980b9; cursor: pointer; }
-        
-        .back-btn { background: none; color: #bdc3c7; border: 1px solid #bdc3c7; padding: 8px 15px; margin-top: 15px; border-radius: 8px; font-size: 14px; }
+        input { width: 85%; padding: 12px; border-radius: 8px; border: none; margin-bottom: 10px; background: #ecf0f1; color: #2c3e50; }
+        .card-stats { background: #34495e; border: 2px solid #f1c40f; border-radius: 12px; padding: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .card-item { background: #ecf0f1; color: #2c3e50; padding: 10px; border-radius: 5px; font-size: 13px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="main-menu" class="screen active">
-        <h1>ARENA CLASH</h1>
-        <button class="menu-btn create" onclick="showScreen('create-room')">✨ Створити кімнату</button>
-        <button class="menu-btn join" onclick="showScreen('join-room')">🔑 Приєднатися</button>
-    </div>
-
-    <div id="create-room" class="screen">
-        <h1>Нова гра</h1>
-        <p>Код вашої кімнати:</p>
-        <h2 id="room-code-display" style="font-size: 45px; color: #f1c40f; letter-spacing: 5px;">-----</h2>
-        <button class="menu-btn" onclick="generateCode()">Згенерувати код</button>
-        <p style="font-size: 12px; color: #bdc3c7;">Скиньте цей код друзям</p>
-        <button class="menu-btn" style="background:#8e44ad" onclick="showScreen('player-screen')">Почати як Гравець</button>
-        <button class="menu-btn" style="background:#d35400" onclick="showScreen('spy-screen')">Почати як Шпигун</button>
-        <button class="back-btn" onclick="showScreen('main-menu')">← Назад</button>
-    </div>
-
-    <div id="join-room" class="screen">
-        <h1>Вхід</h1>
-        <input type="text" id="room-input" placeholder="Введіть 5-значний код..." maxlength="5">
-        <button class="menu-btn" onclick="joinRoom()">Увійти в гру</button>
-        <button class="back-btn" onclick="showScreen('main-menu')">← Назад</button>
-    </div>
-
-    <div id="player-screen" class="screen">
-        <h1>Ваша Карта</h1>
-        <div class="card-stats">
-            <h1 id="card-name" style="color: #f1c40f;">П.Е.К.К.А</h1>
-            <p>⚔️ Шкода: 678</p>
-            <p>❤️ Здоров'я: 3400</p>
-            <p>⚡ Швидкість: Повільна</p>
-            <p>💎 Рідкість: Епічна</p>
+    <div id="screen-menu" class="screen active">
+        <div class="content">
+            <h1>CLASH SPY</h1>
+            <button class="menu-btn" style="background:#27ae60" onclick="generateCode()">Створити гру</button>
+            <p>Код: <span id="room-code" style="color:#f1c40f; font-weight:bold">-----</span></p>
+            <hr style="width:100%; opacity:0.2">
+            <input type="text" id="join-input" placeholder="Код кімнати (5 знаків)">
+            <button class="menu-btn" style="background:#e67e22" onclick="joinGame()">Увійти в Арену</button>
         </div>
-        <button class="back-btn" onclick="showScreen('main-menu')">Завершити гру</button>
     </div>
 
-    <div id="spy-screen" class="screen">
-        <h1>Ти — Шпигун 🕵️</h1>
-        <input type="text" id="search" placeholder="Пошук карти..." onkeyup="searchCard()">
-        <div class="grid" id="card-grid"></div>
-        <button class="back-btn" onclick="showScreen('main-menu')">Вийти</button>
+    <div id="screen-game" class="screen">
+        <div class="content">
+            <div id="role-header"></div>
+            <div class="timer" id="timer">02:00</div>
+            
+            <div id="player-view" style="display:none">
+                <div class="card-stats">
+                    <h2 id="target-card">П.Е.К.К.А</h2>
+                    <p>⚔️ 678 | ❤️ 3400</p>
+                </div>
+            </div>
+
+            <div id="spy-view" style="display:none">
+                <input type="text" id="search" placeholder="Пошук..." onkeyup="searchCard()">
+                <div class="grid" id="card-grid"></div>
+            </div>
+
+            <h3>Чат Арени</h3>
+            <div id="chat-box"></div>
+            <input type="text" id="chat-input" placeholder="Ваше повідомлення...">
+            <button class="menu-btn" id="send-btn" onclick="sendMessage()">Надіслати</button>
+        </div>
+    </div>
+
+    <div id="screen-profile" class="screen">
+        <div class="content">
+            <h1>Мій Профіль</h1>
+            <div style="background:#34495e; padding:20px; border-radius:15px">
+                <p>Статистика скоро з'явиться...</p>
+                <p>Перемог: 0</p>
+                <p>Зіграно ігор: 0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item" onclick="nav('screen-menu')">🏠 Головна</div>
+        <div class="nav-item" onclick="nav('screen-game')">⚔️ Гра</div>
+        <div class="nav-item" onclick="nav('screen-profile')">👤 Профіль</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const cards = [
-            "П.Е.К.К.А", "Мегалицар", "Всадник на кабані", "Спаркі", "Електромаг", "Принцеса", "Шахтар", "Бревно", "Торнадо", 
-            "Маленький принц", "Монах", "Фенікс", "Бандитка", "Нічна відьма", "Магічний лучник", "Рибак", "Електровелетень", 
-            "Королівський привид", "Плазмовий дракон", "Крижаний маг", "Гонча", "Цвинтар", "Елітний варвар", 
-            "Варвари", "Орда міньйонів", "Гігант", "Скелетна армія", "Відьма", "Кат", "Повітряна куля", 
-            "Велетенський скелет", "Гоблінська бочка", "Гоблін-бурильник", "Принц", "Темний принц", "Мисливець", "Отрута", 
-            "Грім", "Дзеркало", "Арбалет", "Мортира", "Гармата", "Вежа-бомбардувальник", "Тесла", "Пекельна вежа", 
-            "Гоблінська хатина", "Надгробок", "Піч", "Клітка з гобліном", "Варварська хатина", "Збирач еліксиру", 
-            "Вершник на барані", "Стріли", "Вогняна куля", "Ракета", "Розряд", "Сніжка", "Землетрус", "Ядро", 
-            "Бойовий таран", "Бойова цілителька", "Екзекутор", "Мушкетер", "Три мушкетери", "Валькірія", "Міні П.Е.К.К.А", 
-            "Свині-вершники", "Маленький дракон", "Королівські рекрути", "Летючка", "Міньйони", "Гобліни", "Скелети", 
-            "Дух вогню", "Дух льоду", "Дух електро", "Дух зцілення", "Кажани", "Підривник", "Лицар", "Лучники",
-            "Велетенський сніжок", "Гоблін з дротиками", "Банда гоблінів", "Королівський гігант", "Елітні варвари",
-            "Ракета", "Ярость", "Клон", "Торнадо", "Дзеркало", "Бочка зі скелетами", "Королівські кабани"
-        ];
+        let isSpy = false;
+        let timerSeconds = 120;
+        let canType = true;
 
-        function showScreen(id) {
+        const cards = ["П.Е.К.К.А", "Мегалицар", "Всадник на кабані", "Спаркі", "Електромаг", "Принцеса", "Шахтар", "Бревно", "Торнадо", "Маленький принц", "Монах", "Фенікс", "Бандитка", "Нічна відьма", "Магічний лучник", "Рибак", "Електровелетень", "Королівський привид", "Плазмовий дракон", "Крижаний маг", "Гонча", "Цвинтар", "Елітний варвар", "Варвари", "Орда міньйонів", "Гігант", "Скелетна армія", "Відьма", "Кат", "Повітряна куля", "Велетенський скелет", "Гоблінська бочка", "Принц", "Темний принц", "Мисливець", "Отрута", "Грім", "Дзеркало", "Арбалет", "Мортира", "Гармата", "Вежа-бомбардувальник", "Тесла", "Пекельна вежа"];
+
+        function nav(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'spy-screen') renderGrid(cards);
         }
 
         function generateCode() {
             const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-            document.getElementById('room-code-display').innerText = code;
+            document.getElementById('room-code').innerText = code;
         }
 
-        function joinRoom() {
-            const code = document.getElementById('room-input').value;
-            if(code.length === 5) {
-                // Для тесту кидаємо на екран гравця
-                showScreen('player-screen');
-            } else {
-                tg.showAlert("Введіть коректний 5-значний код!");
+        function joinGame() {
+            const code = document.getElementById('join-input').value;
+            if(code.length < 3) {
+                tg.showAlert("Мінімум 3 символи!");
+                return;
             }
+            
+            // Рандом ролі
+            isSpy = Math.random() < 0.3; // 30% шанс бути шпигуном
+            setupGame();
+            nav('screen-game');
+            startTimer();
+        }
+
+        function setupGame() {
+            const header = document.getElementById('role-header');
+            if(isSpy) {
+                header.innerHTML = "<h1 style='color:#e74c3c'>Ти — Шпигун 🕵️</h1>";
+                document.getElementById('spy-view').style.display = 'block';
+                document.getElementById('player-view').style.display = 'none';
+                renderGrid(cards);
+            } else {
+                header.innerHTML = "<h1 style='color:#27ae60'>Ти — Гравець 🛡️</h1>";
+                document.getElementById('spy-view').style.display = 'none';
+                document.getElementById('player-view').style.display = 'block';
+                document.getElementById('target-card').innerText = cards[Math.floor(Math.random()*cards.length)];
+            }
+        }
+
+        function startTimer() {
+            const tDiv = document.getElementById('timer');
+            const interval = setInterval(() => {
+                let m = Math.floor(timerSeconds / 60);
+                let s = timerSeconds % 60;
+                tDiv.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                if(timerSeconds <= 0) {
+                    clearInterval(interval);
+                    tg.showAlert("Час вичерпано!");
+                }
+                timerSeconds--;
+            }, 1000);
+        }
+
+        function sendMessage() {
+            if(!canType) return;
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+
+            const chat = document.getElementById('chat-box');
+            chat.innerHTML += `<div class="msg"><b>Ти:</b> ${input.value}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+            input.value = "";
+
+            // Блокування черги
+            canType = false;
+            document.getElementById('send-btn').innerText = "Чекайте...";
+            setTimeout(() => {
+                canType = true;
+                document.getElementById('send-btn').innerText = "Надіслати";
+            }, 3000); // Блокуємо на 3 сек
         }
 
         function renderGrid(list) {
             const container = document.getElementById('card-grid');
-            container.innerHTML = list.sort().map(name => `
-                <div class="card-item" onclick="confirmGuess('${name}')">${name}</div>
-            `).join('');
+            container.innerHTML = list.map(name => `<div class="card-item" onclick="confirmGuess('${name}')">${name}</div>`).join('');
         }
 
         function searchCard() {
-            const query = document.getElementById('search').value.toLowerCase();
-            const filtered = cards.filter(c => c.toLowerCase().includes(query));
-            renderGrid(filtered);
+            const q = document.getElementById('search').value.toLowerCase();
+            renderGrid(cards.filter(c => c.toLowerCase().includes(q)));
         }
 
         function confirmGuess(name) {
-            tg.showConfirm(`Ти впевнений, що це ${name}?`, (ok) => {
-                if (ok) {
-                    tg.sendData(JSON.stringify({role: "spy", guess: name}));
-                    tg.close();
-                }
+            tg.showConfirm(`Вгадати карту ${name}?`, (ok) => {
+                if(ok) tg.sendData(JSON.stringify({role: "spy", guess: name}));
+                // Додаток НЕ закриваємо автоматично
             });
         }
     </script>
