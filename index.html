@@ -225,6 +225,29 @@
         if(myKey && roomID) db.ref('rooms/' + roomID + '/players/' + myKey).remove();
         location.reload();
     }
+    async function finishGame(winnerName, spyName) {
+    const roomRef = db.ref('rooms/' + roomID);
+    
+    // 1. Отримуємо ID гравця з Telegram (якщо є) або створюємо свій
+    const userId = tg.initDataUnsafe?.user?.id || myName;
+
+    // 2. Якщо цей гравець переміг — додаємо йому бал в "Профіль"
+    if (myName === winnerName) {
+        await DB.saveWin(userId, myName);
+    }
+
+    // 3. Тільки Хост має право видалити лобі з бази після паузи (наприклад, 5 сек)
+    if (isHost) {
+        setTimeout(async () => {
+            await DB.destroyRoom(roomID);
+            location.reload(); // Повертаємо всіх у меню
+        }, 5000); 
+    } else {
+        alert(`Гра завершена! Переміг: ${winnerName}. Повернення в меню...`);
+        setTimeout(() => location.reload(), 5000);
+    }
+}
 </script>
 </body>
 </html>
+
