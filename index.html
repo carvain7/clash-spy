@@ -11,31 +11,22 @@
         :root { --bg: #0b101b; --card: #1c2538; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; --text: #e2e8f0; }
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
-        /* Вкладки */
         .tab-bar { display: flex; background: #161f32; border-bottom: 1px solid #2d3748; }
         .tab { flex: 1; padding: 15px; text-align: center; font-weight: bold; font-size: 14px; cursor: pointer; opacity: 0.5; transition: 0.3s; }
         .tab.active { opacity: 1; border-bottom: 3px solid var(--accent); color: var(--accent); }
-
         .screen { display: none; height: calc(100vh - 50px); width: 100%; flex-direction: column; padding: 20px; overflow-y: auto; }
         .active-screen { display: flex; }
-
-        /* Елементи інтерфейсу */
         .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; margin: 8px 0; font-size: 16px; color: white; text-transform: uppercase; transition: 0.1s; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
         .btn-blue { background: var(--blue); }
         .btn-green { background: var(--green); }
         .btn-red { background: var(--red); }
         .btn:active { transform: translateY(2px); box-shadow: none; }
-
+        .btn:disabled { background: #4a5568; box-shadow: none; cursor: not-allowed; }
         input { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #2d3748; background: #111827; color: white; font-size: 18px; margin-bottom: 10px; text-align: center; }
-
         .card-display { background: var(--card); border-radius: 20px; padding: 20px; text-align: center; border: 2px solid var(--accent); margin-bottom: 15px; }
         .unit-img { width: 120px; height: 145px; object-fit: contain; margin-bottom: 10px; border-radius: 10px; }
-        
-        /* Рейтинг */
-        .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; }
+        .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; align-items: center; }
         .rank-pos { color: var(--accent); font-weight: 900; width: 30px; }
-        
         #chat-window { flex: 1; background: #05070a; margin: 10px 0; padding: 12px; overflow-y: auto; border-radius: 12px; border: 1px solid #1a2236; font-size: 14px; }
         .msg { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; }
     </style>
@@ -59,15 +50,15 @@
         </div>
 
         <div id="lobby-area" style="display:none; flex-direction:column; height:100%;">
+            <h2 style="text-align:center; margin:0; font-size:12px; opacity:0.6;">КОД КІМНАТИ</h2>
             <h1 id="room-code-label" style="text-align:center; color:var(--accent); font-size: 42px; margin:0;">----</h1>
             <div id="player-list" style="flex:1; margin:15px 0; background:rgba(0,0,0,0.2); border-radius:10px; padding:10px;"></div>
             <button id="start-btn" class="btn btn-blue" onclick="startGame()" style="display:none;">ПОЧАТИ БИТВУ</button>
-            <button class="btn btn-red" onclick="location.reload()">ВИЙТИ</button>
+            <button class="btn btn-red" onclick="location.reload()" style="background:none; box-shadow:none;">ВИЙТИ</button>
         </div>
 
         <div id="play-area" style="display:none; flex-direction:column; height:100%;">
-            <div class="card-display" id="role-card">
-                </div>
+            <div class="card-display" id="role-card"></div>
             <div id="chat-window"></div>
             <div style="display:flex; gap:5px;">
                 <input type="text" id="chat-input" placeholder="Твоє питання..." style="flex:1; margin:0;">
@@ -84,12 +75,12 @@
             <div style="font-size: 48px;">🏆 <span id="prof-wins">0</span></div>
             <p>Перемог у битвах</p>
         </div>
-        <div style="opacity: 0.5; text-align: center; font-size: 12px;">Твій ID: <span id="prof-id"></span></div>
+        <div style="opacity: 0.5; text-align: center; font-size: 12px;">ID: <span id="prof-id"></span></div>
     </div>
 
     <div id="scr-leaderboard" class="screen">
         <h2 style="color:var(--accent)">ТОП ГРАВЦІВ</h2>
-        <div id="rank-list">Завантаження рейтингу...</div>
+        <div id="rank-list"></div>
     </div>
 
 <script>
@@ -109,7 +100,6 @@
     let roomID = null;
     let isHost = false;
 
-    // Списки карт з картинками
     const clashCards = [
         { n: "П.Е.К.К.А", i: "https://vignette.wikia.nocookie.net/clashroyale/images/7/7b/P.E.K.K.A.png" },
         { n: "Мегалицар", i: "https://vignette.wikia.nocookie.net/clashroyale/images/6/6d/MegaKnightCard.png" },
@@ -117,10 +107,11 @@
         { n: "Вершник на кабані", i: "https://vignette.wikia.nocookie.net/clashroyale/images/a/a5/HogRidderCard.png" },
         { n: "Спаркі", i: "https://vignette.wikia.nocookie.net/clashroyale/images/3/30/SparkyCard.png" },
         { n: "Відьма", i: "https://vignette.wikia.nocookie.net/clashroyale/images/a/a2/WitchCard.png" },
-        { n: "Громовержець", i: "https://vignette.wikia.nocookie.net/clashroyale/images/d/d4/ElectroWizardCard.png" }
+        { n: "Громовержець", i: "https://vignette.wikia.nocookie.net/clashroyale/images/d/d4/ElectroWizardCard.png" },
+        { n: "Куля", i: "https://vignette.wikia.nocookie.net/clashroyale/images/0/00/BalloonCard.png" },
+        { n: "Магічний лучник", i: "https://vignette.wikia.nocookie.net/clashroyale/images/0/0a/MagicArcherCard.png" }
     ];
 
-    // Навігація
     function switchTab(tabId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -129,7 +120,6 @@
         if(tabId === 'leaderboard') loadLeaderboard();
     }
 
-    // Завантаження профілю
     db.ref('users/' + uID).on('value', (snap) => {
         const data = snap.val() || { wins: 0, name: uName };
         if(!snap.exists()) db.ref('users/' + uID).set({ name: uName, wins: 0 });
@@ -138,7 +128,6 @@
         document.getElementById('prof-id').innerText = uID;
     });
 
-    // Рейтинг
     function loadLeaderboard() {
         db.ref('users').orderByChild('wins').limitToLast(10).once('value', (snap) => {
             const list = document.getElementById('rank-list');
@@ -155,7 +144,6 @@
         });
     }
 
-    // Логіка гри (спрощена навігація всередині Game Tab)
     async function createLobby() {
         roomID = Math.floor(1000 + Math.random() * 8999).toString();
         isHost = true;
@@ -165,7 +153,8 @@
     }
 
     async function joinLobby() {
-        const val = document.getElementById('lobby-input').value;
+        const val = document.getElementById('lobby-input').value.trim();
+        if(!val) return alert("Введіть код!");
         const snap = await db.ref('rooms/' + val).once('value');
         if(!snap.exists()) return alert("Кімнату не знайдено!");
         roomID = val; isHost = false;
@@ -183,16 +172,21 @@
         document.getElementById('room-code-label').innerText = roomID;
         const roomRef = db.ref('rooms/' + roomID);
         roomRef.child('players').child(uID).set({ name: uName, id: uID });
-        
+
         roomRef.child('players').on('value', (snap) => {
             const list = document.getElementById('player-list');
             list.innerHTML = "";
             let c = 0;
             snap.forEach(p => {
                 c++;
-                list.innerHTML += `<div class="rank-item">👤 ${p.val().name}</div>`;
+                list.innerHTML += `<div class="rank-item">👤 ${p.val().name} <span style="color:var(--green); font-size:10px;">ГОТОВИЙ</span></div>`;
             });
-            if(isHost) document.getElementById('start-btn').style.display = c >= 2 ? 'block' : 'none';
+            if(isHost) {
+                const sBtn = document.getElementById('start-btn');
+                sBtn.style.display = 'block';
+                sBtn.disabled = c < 2;
+                sBtn.innerText = c < 2 ? "ОЧІКУВАННЯ ГРАВЦІВ..." : "ПОЧАТИ БИТВУ";
+            }
         });
 
         roomRef.on('value', (snap) => {
@@ -215,17 +209,17 @@
         const isSpy = data.spyID === uID;
         const disp = document.getElementById('role-card');
         if(isSpy) {
-            disp.innerHTML = `<h2 style="color:var(--red)">ТИ ШПИГУН 🕵️</h2><p>Твоя мета: дізнатися карту, не видавши себе!</p>`;
+            disp.innerHTML = `<h2 style="color:var(--red)">ТИ ШПИГУН 🕵️</h2><p style="font-size:14px;">Твоя мета: вгадай карту, не видавши себе!</p>`;
         } else {
             disp.innerHTML = `
-                <h3 style="margin:0">ВАША КАРТА:</h3>
+                <h3 style="margin:0; font-size:14px; opacity:0.8;">ВАША КАРТА:</h3>
                 <h2 style="color:var(--green); margin:5px 0;">${data.cardName}</h2>
                 <img src="${data.cardImg}" class="unit-img">
             `;
         }
         if(isHost) document.getElementById('finish-btn').style.display = 'block';
 
-        // Чат
+        db.ref('rooms/' + roomID + '/chat').off();
         db.ref('rooms/' + roomID + '/chat').on('child_added', (snap) => {
             const m = snap.val();
             document.getElementById('chat-window').innerHTML += `<div class="msg"><b>${m.user}:</b> ${m.msg}</div>`;
@@ -241,7 +235,7 @@
     }
 
     async function finishGameAction() {
-        const winner = prompt("Введіть ім'я переможця:");
+        const winner = prompt("Ім'я переможця:");
         if(!winner) return;
         const pSnap = await db.ref('rooms/' + roomID + '/players').once('value');
         pSnap.forEach(p => {
