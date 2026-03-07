@@ -3,173 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy Game</title>
+    <title>Clash Spy Arena</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --cr-blue: #1e56a0;
-            --cr-gold: #f6c90e;
-            --cr-dark: #222831;
-            --cr-white: #eeeeee;
-        }
-        body {
-            background-color: var(--cr-dark);
-            color: var(--cr-white);
-            font-family: 'Arial', sans-serif;
-            margin: 0; padding: 10px;
-            text-align: center;
-        }
-        /* Характеристики для звичайних гравців */
-        .stats-box {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid var(--cr-gold);
-            border-radius: 15px;
-            padding: 15px; margin-bottom: 20px;
-        }
-        /* Поле пошуку */
-        #card-search {
-            width: 90%;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-        /* Сітка карт */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        .card-item {
-            background: #393e46;
-            border-radius: 8px;
-            padding: 5px;
-            border-bottom: 4px solid #000;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .card-item:active { transform: scale(0.95); }
-        .card-item img { width: 100%; border-radius: 5px; }
-        .card-item span { font-size: 10px; display: block; margin-top: 5px; height: 24px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a2a3a; color: white; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .screen { display: none; width: 100%; max-width: 400px; text-align: center; animation: fadeIn 0.3s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Модальне вікно (Поп-ап) */
-        #modal {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--cr-white);
-            color: #000;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            z-index: 100;
-            width: 80%;
-        }
-        .overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 99;
-        }
-        .btn-confirm { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
-        .btn-cancel { background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
+        h1 { color: #f1c40f; text-shadow: 2px 2px #000; margin-bottom: 20px; font-size: 28px; }
+        .menu-btn { background: #2980b9; color: white; border: none; padding: 18px; border-radius: 12px; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 12px; cursor: pointer; border-bottom: 4px solid #1a5276; }
+        .menu-btn:active { border-bottom: none; transform: translateY(3px); }
+        .create { background: #27ae60; border-color: #1e8449; }
+        .join { background: #e67e22; border-color: #a0522d; }
+        
+        input { width: 90%; padding: 15px; border-radius: 10px; border: none; font-size: 18px; text-align: center; margin-bottom: 15px; background: #ecf0f1; color: #2c3e50; }
+        .card-stats { background: #34495e; border: 3px solid #f1c40f; border-radius: 15px; padding: 20px; margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; max-height: 60vh; overflow-y: auto; padding: 5px; }
+        .card-item { background: #ecf0f1; color: #2c3e50; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; border-left: 5px solid #2980b9; cursor: pointer; }
+        
+        .back-btn { background: none; color: #bdc3c7; border: 1px solid #bdc3c7; padding: 8px 15px; margin-top: 15px; border-radius: 8px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div id="player-view" style="display: none;">
-        <h2>Твоя Карта</h2>
-        <div class="stats-box">
-            <h1 id="player-card-name">---</h1>
-            <p>⚔️ Урон: <span id="stat-dmg">---</span></p>
-            <p>❤️ HP: <span id="stat-hp">---</span></p>
+    <div id="main-menu" class="screen active">
+        <h1>ARENA CLASH</h1>
+        <button class="menu-btn create" onclick="showScreen('create-room')">✨ Створити кімнату</button>
+        <button class="menu-btn join" onclick="showScreen('join-room')">🔑 Приєднатися</button>
+    </div>
+
+    <div id="create-room" class="screen">
+        <h1>Нова гра</h1>
+        <p>Код вашої кімнати:</p>
+        <h2 id="room-code-display" style="font-size: 45px; color: #f1c40f; letter-spacing: 5px;">-----</h2>
+        <button class="menu-btn" onclick="generateCode()">Згенерувати код</button>
+        <p style="font-size: 12px; color: #bdc3c7;">Скиньте цей код друзям</p>
+        <button class="menu-btn" style="background:#8e44ad" onclick="showScreen('player-screen')">Почати як Гравець</button>
+        <button class="menu-btn" style="background:#d35400" onclick="showScreen('spy-screen')">Почати як Шпигун</button>
+        <button class="back-btn" onclick="showScreen('main-menu')">← Назад</button>
+    </div>
+
+    <div id="join-room" class="screen">
+        <h1>Вхід</h1>
+        <input type="text" id="room-input" placeholder="Введіть 5-значний код..." maxlength="5">
+        <button class="menu-btn" onclick="joinRoom()">Увійти в гру</button>
+        <button class="back-btn" onclick="showScreen('main-menu')">← Назад</button>
+    </div>
+
+    <div id="player-screen" class="screen">
+        <h1>Ваша Карта</h1>
+        <div class="card-stats">
+            <h1 id="card-name" style="color: #f1c40f;">П.Е.К.К.А</h1>
+            <p>⚔️ Шкода: 678</p>
+            <p>❤️ Здоров'я: 3400</p>
+            <p>⚡ Швидкість: Повільна</p>
+            <p>💎 Рідкість: Епічна</p>
         </div>
+        <button class="back-btn" onclick="showScreen('main-menu')">Завершити гру</button>
     </div>
 
-    <div id="spy-view" style="display: none;">
-        <h2>Ти — Шпигун 🕵️</h2>
-        <input type="text" id="card-search" placeholder="Пошук карти..." onkeyup="filterCards()">
-        <div class="card-grid" id="grid"></div>
-    </div>
-
-    <div class="overlay" id="overlay"></div>
-    <div id="modal">
-        <h3>Ти впевнений?</h3>
-        <p id="modal-text"></p>
-        <button class="btn-confirm" onclick="sendGuess()">ТАК</button>
-        <button class="btn-cancel" onclick="closeModal()">НІ</button>
+    <div id="spy-screen" class="screen">
+        <h1>Ти — Шпигун 🕵️</h1>
+        <input type="text" id="search" placeholder="Пошук карти..." onkeyup="searchCard()">
+        <div class="grid" id="card-grid"></div>
+        <button class="back-btn" onclick="showScreen('main-menu')">Вийти</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Розгорнути на весь екран
+        tg.expand();
 
-        const allCards = [
-            {name: "П.Е.К.К.А", hp: 3400, dmg: 678},
-            {name: "Мегалицар", hp: 3300, dmg: 222},
-            {name: "Всадник на кабані", hp: 1400, dmg: 264},
-            // ... додай сюди всі 110 карт
+        const cards = [
+            "П.Е.К.К.А", "Мегалицар", "Всадник на кабані", "Спаркі", "Електромаг", "Принцеса", "Шахтар", "Бревно", "Торнадо", 
+            "Маленький принц", "Монах", "Фенікс", "Бандитка", "Нічна відьма", "Магічний лучник", "Рибак", "Електровелетень", 
+            "Королівський привид", "Плазмовий дракон", "Крижаний маг", "Гонча", "Цвинтар", "Елітний варвар", 
+            "Варвари", "Орда міньйонів", "Гігант", "Скелетна армія", "Відьма", "Кат", "Повітряна куля", 
+            "Велетенський скелет", "Гоблінська бочка", "Гоблін-бурильник", "Принц", "Темний принц", "Мисливець", "Отрута", 
+            "Грім", "Дзеркало", "Арбалет", "Мортира", "Гармата", "Вежа-бомбардувальник", "Тесла", "Пекельна вежа", 
+            "Гоблінська хатина", "Надгробок", "Піч", "Клітка з гобліном", "Варварська хатина", "Збирач еліксиру", 
+            "Вершник на барані", "Стріли", "Вогняна куля", "Ракета", "Розряд", "Сніжка", "Землетрус", "Ядро", 
+            "Бойовий таран", "Бойова цілителька", "Екзекутор", "Мушкетер", "Три мушкетери", "Валькірія", "Міні П.Е.К.К.А", 
+            "Свині-вершники", "Маленький дракон", "Королівські рекрути", "Летючка", "Міньйони", "Гобліни", "Скелети", 
+            "Дух вогню", "Дух льоду", "Дух електро", "Дух зцілення", "Кажани", "Підривник", "Лицар", "Лучники",
+            "Велетенський сніжок", "Гоблін з дротиками", "Банда гоблінів", "Королівський гігант", "Елітні варвари",
+            "Ракета", "Ярость", "Клон", "Торнадо", "Дзеркало", "Бочка зі скелетами", "Королівські кабани"
         ];
 
-        let selectedGuess = "";
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'spy-screen') renderGrid(cards);
+        }
 
-        // Приклад отримання ролі (імітація, реально дані прийдуть з бота)
-        const isSpy = true; // Це значення має прийти від бота
+        function generateCode() {
+            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+            document.getElementById('room-code-display').innerText = code;
+        }
 
-        if (isSpy) {
-            document.getElementById('spy-view').style.display = 'block';
-            renderGrid(allCards);
-        } else {
-            document.getElementById('player-view').style.display = 'block';
-            document.getElementById('player-card-name').innerText = "П.Е.К.К.А";
-            document.getElementById('stat-hp').innerText = "3400";
-            document.getElementById('stat-dmg').innerText = "678";
+        function joinRoom() {
+            const code = document.getElementById('room-input').value;
+            if(code.length === 5) {
+                // Для тесту кидаємо на екран гравця
+                showScreen('player-screen');
+            } else {
+                tg.showAlert("Введіть коректний 5-значний код!");
+            }
         }
 
         function renderGrid(list) {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = list.map(card => `
-                <div class="card-item" onclick="openModal('${card.name}')">
-                    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${card.name}" alt="Card">
-                    <span>${card.name}</span>
-                </div>
+            const container = document.getElementById('card-grid');
+            container.innerHTML = list.sort().map(name => `
+                <div class="card-item" onclick="confirmGuess('${name}')">${name}</div>
             `).join('');
         }
 
-        function filterCards() {
-            const q = document.getElementById('card-search').value.toLowerCase();
-            const filtered = allCards.filter(c => c.name.toLowerCase().includes(q));
+        function searchCard() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filtered = cards.filter(c => c.toLowerCase().includes(query));
             renderGrid(filtered);
         }
 
-        function openModal(name) {
-            selectedGuess = name;
-            document.getElementById('modal-text').innerText = `Ти вибираєш: ${name}`;
-            document.getElementById('modal').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-        }
-function sendGuess() {
-    // Дані мають бути рядком (string)
-    const data = JSON.stringify({
-        action: "guess",
-        card: selectedGuess,
-        status: selectedGuess === "П.Е.К.К.А" ? "win" : "lose"
-    });
-    
-    tg.sendData(data); // Це відправить повідомлення в чат від імені користувача
-    tg.close();
-}
-        function sendGuess() {
-            tg.sendData(JSON.stringify({action: "guess", card: selectedGuess}));
-            tg.close();
+        function confirmGuess(name) {
+            tg.showConfirm(`Ти впевнений, що це ${name}?`, (ok) => {
+                if (ok) {
+                    tg.sendData(JSON.stringify({role: "spy", guess: name}));
+                    tg.close();
+                }
+            });
         }
     </script>
 </body>
