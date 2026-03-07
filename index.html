@@ -3,86 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy Elite</title>
+    <title>Clash Spy - Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #121c26; color: white; margin: 0; padding: 0; overflow: hidden; }
-        .screen { display: none; height: 100vh; width: 100%; flex-direction: column; }
+        body { font-family: 'Segoe UI', sans-serif; background: #121c26; color: white; margin: 0; padding: 0; }
+        .screen { display: none; height: 100vh; width: 100%; flex-direction: column; text-align: center; }
         .active { display: flex; }
+        .content { padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 90px; }
         
-        /* Навігація знизу */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1a2a3a; display: flex; justify-content: space-around; padding: 10px 0; border-top: 2px solid #2980b9; }
-        .nav-item { color: #bdc3c7; font-size: 12px; text-align: center; cursor: pointer; flex: 1; }
-        .nav-item.active { color: #f1c40f; }
+        h1 { color: #f1c40f; text-shadow: 2px 2px #000; margin-bottom: 10px; }
+        .menu-btn { background: #2980b9; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-size: 16px; font-weight: bold; margin-bottom: 10px; border-bottom: 4px solid #1a5276; transition: 0.1s; }
+        .menu-btn:active { transform: translateY(3px); border-bottom: none; }
+        
+        /* Lobby Styles */
+        .lobby-list { background: #1a2a3a; border-radius: 10px; padding: 15px; margin: 15px 0; text-align: left; }
+        .player-tag { background: #34495e; padding: 8px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .ready-status { color: #27ae60; font-size: 12px; }
 
-        /* Контент */
-        .content { padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 80px; text-align: center; }
-        h1 { color: #f1c40f; text-shadow: 2px 2px #000; }
-        .menu-btn { background: #2980b9; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-size: 16px; font-weight: bold; margin-bottom: 10px; border-bottom: 4px solid #1a5276; }
+        /* Game UI */
+        .timer { font-size: 32px; color: #e74c3c; font-weight: bold; margin: 10px 0; }
+        .card-stats { background: #34495e; border: 3px solid #f1c40f; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
+        #chat-box { background: #0d161f; height: 150px; border-radius: 10px; overflow-y: auto; padding: 10px; text-align: left; margin-bottom: 10px; border: 1px solid #2980b9; }
         
-        /* Чат */
-        #chat-box { background: #0d161f; height: 200px; border-radius: 10px; overflow-y: auto; padding: 10px; text-align: left; margin-bottom: 10px; font-size: 14px; }
-        .msg { margin-bottom: 5px; border-bottom: 1px solid #1a2a3a; padding-bottom: 2px; }
-        .timer { font-size: 24px; color: #e74c3c; font-weight: bold; margin: 10px 0; }
+        .win-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
         
-        input { width: 85%; padding: 12px; border-radius: 8px; border: none; margin-bottom: 10px; background: #ecf0f1; color: #2c3e50; }
-        .card-stats { background: #34495e; border: 2px solid #f1c40f; border-radius: 12px; padding: 15px; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .card-item { background: #ecf0f1; color: #2c3e50; padding: 10px; border-radius: 5px; font-size: 13px; font-weight: bold; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #1a2a3a; display: flex; justify-content: space-around; padding: 12px 0; border-top: 2px solid #2980b9; }
+        .nav-item { color: #bdc3c7; font-size: 11px; flex: 1; text-align: center; }
+        .nav-item.active { color: #f1c40f; }
     </style>
 </head>
 <body>
 
     <div id="screen-menu" class="screen active">
         <div class="content">
-            <h1>CLASH SPY</h1>
-            <button class="menu-btn" style="background:#27ae60" onclick="generateCode()">Створити гру</button>
-            <p>Код: <span id="room-code" style="color:#f1c40f; font-weight:bold">-----</span></p>
-            <hr style="width:100%; opacity:0.2">
-            <input type="text" id="join-input" placeholder="Код кімнати (5 знаків)">
-            <button class="menu-btn" style="background:#e67e22" onclick="joinGame()">Увійти в Арену</button>
+            <h1>ARENA CLASH</h1>
+            <button class="menu-btn" style="background:#27ae60" onclick="toLobby(true)">✨ Створити кімнату</button>
+            <input type="text" id="join-input" placeholder="Код (мінімум 3 знаки)" style="width:85%; padding:12px; border-radius:8px; margin:10px 0; border:none;">
+            <button class="menu-btn" style="background:#e67e22" onclick="toLobby(false)">🔑 Приєднатися</button>
+        </div>
+    </div>
+
+    <div id="screen-lobby" class="screen">
+        <div class="content">
+            <h1>ЛОБІ ГРИ</h1>
+            <p>Код доступу: <b id="display-code" style="color:#f1c40f; font-size:24px">-----</b></p>
+            <div class="lobby-list">
+                <p style="color:#bdc3c7; margin-top:0;">Гравці в черзі:</p>
+                <div class="player-tag"><span>👤 Ви (Host)</span> <span class="ready-status">● Готовий</span></div>
+                <div class="player-tag"><span>👤 Player_823</span> <span class="ready-status">● Очікування</span></div>
+                <div id="extra-players"></div>
+            </div>
+            <button class="menu-btn" style="background:#8e44ad" onclick="startGame()">🚀 ПОЧАТИ БИТВУ</button>
+            <button class="menu-btn" style="background:none; border:1px solid #e74c3c" onclick="nav('screen-menu')">Скасувати</button>
         </div>
     </div>
 
     <div id="screen-game" class="screen">
         <div class="content">
-            <div id="role-header"></div>
+            <div id="role-title"></div>
             <div class="timer" id="timer">02:00</div>
             
             <div id="player-view" style="display:none">
                 <div class="card-stats">
-                    <h2 id="target-card">П.Е.К.К.А</h2>
-                    <p>⚔️ 678 | ❤️ 3400</p>
+                    <h2 id="target-card">---</h2>
+                    <p>⚔️ Шкода: 678 | ❤️ Життя: 3400</p>
                 </div>
+                <button class="menu-btn" style="background:#c0392b" onclick="voteSpy()">🚫 ВИКРИТИ ШПИГУНА</button>
             </div>
 
             <div id="spy-view" style="display:none">
-                <input type="text" id="search" placeholder="Пошук..." onkeyup="searchCard()">
-                <div class="grid" id="card-grid"></div>
+                <p>Знайди карту, поки тебе не викрили!</p>
+                <input type="text" id="search" placeholder="Пошук карти..." onkeyup="searchCard()" style="width:90%; padding:10px; border-radius:5px; border:none; margin-bottom:10px;">
+                <div id="card-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; max-height:150px; overflow-y:auto;"></div>
             </div>
 
-            <h3>Чат Арени</h3>
             <div id="chat-box"></div>
-            <input type="text" id="chat-input" placeholder="Ваше повідомлення...">
-            <button class="menu-btn" id="send-btn" onclick="sendMessage()">Надіслати</button>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="chat-input" placeholder="Повідомлення..." style="flex:1; border-radius:5px; border:none; padding:10px;">
+                <button onclick="sendMessage()" id="send-btn" style="padding:10px; background:#2980b9; border:none; border-radius:5px; color:white;">➜</button>
+            </div>
         </div>
     </div>
 
-    <div id="screen-profile" class="screen">
-        <div class="content">
-            <h1>Мій Профіль</h1>
-            <div style="background:#34495e; padding:20px; border-radius:15px">
-                <p>Статистика скоро з'явиться...</p>
-                <p>Перемог: 0</p>
-                <p>Зіграно ігор: 0</p>
-            </div>
-        </div>
+    <div id="finish-screen" class="win-screen">
+        <h1 id="finish-title" style="font-size:40px;">ПЕРЕМОГА!</h1>
+        <p id="finish-desc" style="font-size:18px; color:#bdc3c7;"></p>
+        <br>
+        <button class="menu-btn" style="width:200px" onclick="location.reload()">В МЕНЮ</button>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item" onclick="nav('screen-menu')">🏠 Головна</div>
-        <div class="nav-item" onclick="nav('screen-game')">⚔️ Гра</div>
-        <div class="nav-item" onclick="nav('screen-profile')">👤 Профіль</div>
+        <div class="nav-item" onclick="nav('screen-menu')">🏠</div>
+        <div class="nav-item active" onclick="nav('screen-game')">⚔️</div>
+        <div class="nav-item" onclick="nav('screen-lobby')">👥</div>
     </div>
 
     <script>
@@ -90,44 +103,39 @@
         tg.expand();
 
         let isSpy = false;
-        let timerSeconds = 120;
-        let canType = true;
-
-        const cards = ["П.Е.К.К.А", "Мегалицар", "Всадник на кабані", "Спаркі", "Електромаг", "Принцеса", "Шахтар", "Бревно", "Торнадо", "Маленький принц", "Монах", "Фенікс", "Бандитка", "Нічна відьма", "Магічний лучник", "Рибак", "Електровелетень", "Королівський привид", "Плазмовий дракон", "Крижаний маг", "Гонча", "Цвинтар", "Елітний варвар", "Варвари", "Орда міньйонів", "Гігант", "Скелетна армія", "Відьма", "Кат", "Повітряна куля", "Велетенський скелет", "Гоблінська бочка", "Принц", "Темний принц", "Мисливець", "Отрута", "Грім", "Дзеркало", "Арбалет", "Мортира", "Гармата", "Вежа-бомбардувальник", "Тесла", "Пекельна вежа"];
+        let timerVal = 120;
+        let gameActive = false;
+        const cards = ["П.Е.К.К.А", "Мегалицар", "Спаркі", "Електромаг", "Принцеса", "Шахтар", "Бревно", "Торнадо", "Маленький принц", "Гігант", "Скелетна армія", "Гоблінська бочка"];
 
         function nav(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        function generateCode() {
-            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-            document.getElementById('room-code').innerText = code;
+        function toLobby(isNew) {
+            const code = isNew ? Math.random().toString(36).substring(2, 7).toUpperCase() : document.getElementById('join-input').value;
+            if(code.length < 3) return tg.showAlert("Код занадто короткий!");
+            document.getElementById('display-code').innerText = code;
+            nav('screen-lobby');
         }
 
-        function joinGame() {
-            const code = document.getElementById('join-input').value;
-            if(code.length < 3) {
-                tg.showAlert("Мінімум 3 символи!");
-                return;
-            }
-            
-            // Рандом ролі
-            isSpy = Math.random() < 0.3; // 30% шанс бути шпигуном
+        function startGame() {
+            isSpy = Math.random() < 0.3;
+            gameActive = true;
             setupGame();
             nav('screen-game');
             startTimer();
         }
 
         function setupGame() {
-            const header = document.getElementById('role-header');
+            const title = document.getElementById('role-title');
             if(isSpy) {
-                header.innerHTML = "<h1 style='color:#e74c3c'>Ти — Шпигун 🕵️</h1>";
+                title.innerHTML = "<h1 style='color:#e74c3c'>Ти — Шпигун 🕵️</h1>";
                 document.getElementById('spy-view').style.display = 'block';
                 document.getElementById('player-view').style.display = 'none';
                 renderGrid(cards);
             } else {
-                header.innerHTML = "<h1 style='color:#27ae60'>Ти — Гравець 🛡️</h1>";
+                title.innerHTML = "<h1 style='color:#27ae60'>Ти — Гравець 🛡️</h1>";
                 document.getElementById('spy-view').style.display = 'none';
                 document.getElementById('player-view').style.display = 'block';
                 document.getElementById('target-card').innerText = cards[Math.floor(Math.random()*cards.length)];
@@ -135,52 +143,63 @@
         }
 
         function startTimer() {
-            const tDiv = document.getElementById('timer');
-            const interval = setInterval(() => {
-                let m = Math.floor(timerSeconds / 60);
-                let s = timerSeconds % 60;
-                tDiv.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                if(timerSeconds <= 0) {
-                    clearInterval(interval);
-                    tg.showAlert("Час вичерпано!");
+            const timerDiv = document.getElementById('timer');
+            const intrvl = setInterval(() => {
+                if(!gameActive) { clearInterval(intrvl); return; }
+                let m = Math.floor(timerVal / 60);
+                let s = timerVal % 60;
+                timerDiv.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if(timerVal <= 0) {
+                    clearInterval(intrvl);
+                    endGame(false, "Час вийшов! Шпигун переміг.");
                 }
-                timerSeconds--;
+                timerVal--;
             }, 1000);
         }
 
+        function voteSpy() {
+            tg.showConfirm("Ви впевнені, що знайшли шпигуна?", (ok) => {
+                if(ok) {
+                    // Імітація: в 50% випадків гравці вгадали
+                    if(isSpy) endGame(false, "Тебе викрили! Гравці перемогли.");
+                    else endGame(true, "Ви вигнали мирного гравця! Шпигун переміг.");
+                }
+            });
+        }
+
+        function endGame(isWin, text) {
+            gameActive = false;
+            const screen = document.getElementById('finish-screen');
+            document.getElementById('finish-title').innerText = isWin ? "ПЕРЕМОГА!" : "ПРОГРАШ!";
+            document.getElementById('finish-desc').innerText = text;
+            screen.style.display = 'flex';
+        }
+
         function sendMessage() {
-            if(!canType) return;
-            const input = document.getElementById('chat-input');
-            if(!input.value) return;
-
-            const chat = document.getElementById('chat-box');
-            chat.innerHTML += `<div class="msg"><b>Ти:</b> ${input.value}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-            input.value = "";
-
-            // Блокування черги
-            canType = false;
-            document.getElementById('send-btn').innerText = "Чекайте...";
-            setTimeout(() => {
-                canType = true;
-                document.getElementById('send-btn').innerText = "Надіслати";
-            }, 3000); // Блокуємо на 3 сек
+            const inp = document.getElementById('chat-input');
+            if(!inp.value) return;
+            const box = document.getElementById('chat-box');
+            box.innerHTML += `<div><b>Ви:</b> ${inp.value}</div>`;
+            box.scrollTop = box.scrollHeight;
+            inp.value = "";
+            // Блокування кнопки
+            const btn = document.getElementById('send-btn');
+            btn.disabled = true; btn.style.opacity = 0.5;
+            setTimeout(() => { btn.disabled = false; btn.style.opacity = 1; }, 3000);
         }
 
         function renderGrid(list) {
-            const container = document.getElementById('card-grid');
-            container.innerHTML = list.map(name => `<div class="card-item" onclick="confirmGuess('${name}')">${name}</div>`).join('');
+            const grid = document.getElementById('card-grid');
+            grid.innerHTML = list.map(n => `<div onclick="guess('${n}')" style="background:white; color:black; padding:10px; border-radius:5px; font-size:12px;">${n}</div>`).join('');
         }
 
-        function searchCard() {
-            const q = document.getElementById('search').value.toLowerCase();
-            renderGrid(cards.filter(c => c.toLowerCase().includes(q)));
-        }
-
-        function confirmGuess(name) {
+        function guess(name) {
             tg.showConfirm(`Вгадати карту ${name}?`, (ok) => {
-                if(ok) tg.sendData(JSON.stringify({role: "spy", guess: name}));
-                // Додаток НЕ закриваємо автоматично
+                if(ok) {
+                    const target = document.getElementById('target-card').innerText;
+                    if(name === target || Math.random() > 0.5) endGame(true, `Шпигун вгадав карту ${name}!`);
+                    else endGame(false, `Шпигун не вгадав! Це була інша карта.`);
+                }
             });
         }
     </script>
