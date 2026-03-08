@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy v5.6.3 Admin Back</title>
+    <title>Clash Spy v5.7.0 Admin Back</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -11,27 +11,40 @@
         :root { --bg: #0b101b; --card: #1c2538; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; --text: #e2e8f0; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* АНІМАЦІЇ */
+        .screen { display: none; flex: 1; padding: 15px; overflow-y: auto; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
         .tab-bar { display: flex; background: #161f32; height: 60px; border-bottom: 2px solid #2d3748; flex-shrink: 0; }
-        .tab { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; opacity: 0.5; cursor: pointer; }
+        .tab { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; opacity: 0.5; cursor: pointer; transition: 0.3s; }
         .tab.active { opacity: 1; color: var(--accent); border-bottom: 3px solid var(--accent); }
-        .screen { display: none; flex: 1; padding: 15px; overflow-y: auto; }
+        
         .active-screen { display: flex; flex-direction: column; }
-        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; color: white; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; color: white; cursor: pointer; margin-bottom: 8px; transition: 0.2s; position: relative; }
         .btn-blue { background: var(--blue); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
+        .btn:active { transform: scale(0.96); }
         .btn:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+        
+        /* ЛІЧИЛЬНИК ГОЛОСІВ */
+        .vote-count { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--red); color: white; padding: 2px 8px; border-radius: 8px; font-size: 12px; border: 1px solid white; }
+        
         input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #2d3748; background: #111827; color: white; text-align: center; margin-bottom: 10px; }
         .card-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid #2d3748; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .rank-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(245, 158, 11, 0.2); color: var(--accent); margin-left: 8px; border: 1px solid var(--accent); }
         
-        /* СТИЛІ ПАНЕЛІ */
+        /* ПАНЕЛЬ АДМІНА */
         #adm-btn { position: fixed; bottom: 80px; right: 20px; width: 45px; height: 45px; background: var(--accent); border-radius: 50%; display: none; align-items: center; justify-content: center; z-index: 1000; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #adm-panel { position: fixed; bottom: 135px; right: 20px; width: 260px; background: #1e293b; border: 2px solid var(--accent); border-radius: 15px; padding: 15px; display: none; z-index: 1001; }
+        #adm-panel { position: fixed; bottom: 135px; right: 20px; width: 260px; background: #1e293b; border: 2px solid var(--accent); border-radius: 15px; padding: 15px; display: none; z-index: 1001; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         
         #chat-stream { flex: 1; background: #05070a; border-radius: 12px; padding: 10px; margin: 10px 0; overflow-y: auto; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 8px; }
-        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; background: #1e293b; font-size: 14px; }
+        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; background: #1e293b; font-size: 14px; animation: fadeIn 0.2s ease; }
         .msg-bubble.mine { align-self: flex-end; border-right: 3px solid var(--blue); background: #26334d; }
-        #turn-indicator { text-align: center; font-size: 12px; padding: 8px; color: var(--accent); font-weight: bold; background: rgba(245, 158, 11, 0.1); border-radius: 8px; margin-bottom: 5px; }
-        #toast { position: fixed; top: -100px; left: 15px; right: 15px; padding: 15px; border-radius: 12px; text-align: center; z-index: 10000; transition: 0.5s; font-weight: bold; }
+        
+        #turn-indicator { text-align: center; font-size: 12px; padding: 8px; color: var(--accent); font-weight: bold; background: rgba(245, 158, 11, 0.1); border-radius: 8px; margin-bottom: 5px; transition: 0.3s; }
+        .active-turn { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); border: 1px solid var(--blue); color: var(--blue) !important; }
+
+        #toast { position: fixed; top: -100px; left: 15px; right: 15px; padding: 15px; border-radius: 12px; text-align: center; z-index: 10000; transition: 0.5s; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         #toast.active { top: 20px; }
         .exit-link { text-align: center; color: var(--red); font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; text-decoration: underline; opacity: 0.7; }
     </style>
@@ -44,6 +57,7 @@
 <div id="adm-panel">
     <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:bold;"><span>ADMIN TOOLS</span><span onclick="toggleAdm()" style="cursor:pointer;">✕</span></div>
     <div id="adm-data-display" style="font-size:11px; margin-bottom:10px; color: #cbd5e1;"></div>
+    <button class="btn btn-blue" style="padding:8px; font-size:10px; margin-bottom:5px;" onclick="addBot()">ДОДАТИ БОТА</button>
     <button class="btn btn-red" style="padding:8px; font-size:10px;" onclick="stopGame()">СКИНУТИ В ЛОБІ</button>
 </div>
 
@@ -101,7 +115,6 @@
         return "🌱 Новачок";
     }
 
-    // ФУНКЦІЯ АКТИВАЦІЇ АДМІНКИ
     function devMode() { 
         dClicks++; 
         if(dClicks >= 5) { 
@@ -121,6 +134,7 @@
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById('scr-' + id).classList.add('active-screen');
         el.classList.add('active');
+        tg.HapticFeedback.impactOccurred('light');
     }
 
     async function createRoom() {
@@ -138,16 +152,24 @@
 
         db.ref('rooms/' + room).on('value', snap => {
             const d = snap.val(); if(!d) return;
-            const ids = Object.keys(d.players);
+            const players = d.players || {};
+            const ids = Object.keys(players);
+            
             document.getElementById('lobby-players').innerHTML = ids.map(id => {
-                return `<div class="card-item"><span>👤 ${d.players[id].name} <span class="rank-badge">${d.players[id].rank || 'Новачок'}</span></span></div>`;
+                return `<div class="card-item"><span>👤 ${players[id].name} <span class="rank-badge">${players[id].rank || 'Новачок'}</span></span></div>`;
             }).join('');
             
-            // ДАНІ ДЛЯ АДМІНКИ
             document.getElementById('adm-data-display').innerHTML = `Карта: ${d.cardName||'?'}<br>Шпигун ID: ${d.spyID||'немає'}`;
             
             if(isHost) { const sBtn = document.getElementById('start-btn'); sBtn.style.display='block'; sBtn.disabled = ids.length < 3; }
-            if(d.status === 'started') { document.getElementById('view-lobby').style.display = 'none'; document.getElementById('view-play').style.display = 'flex'; renderGame(d); }
+            
+            if(d.status === 'started') { 
+                document.getElementById('view-lobby').style.display = 'none'; 
+                document.getElementById('view-play').style.display = 'flex'; 
+                renderGame(d); 
+                // ЛОГІКА БОТІВ (ТІЛЬКИ ДЛЯ ХОСТА)
+                if(isHost) handleBots(d);
+            }
             else { document.getElementById('view-lobby').style.display = 'block'; document.getElementById('view-play').style.display = 'none'; }
             if(d.winner) showEnd(d.winner, d.reason);
         });
@@ -173,9 +195,20 @@
         document.getElementById('spy-btn').style.display = isSpy ? 'block' : 'none';
         const activeID = d.order[d.turnIdx];
         const myTurn = activeID === uID;
-        document.getElementById('turn-indicator').innerText = myTurn ? "ТВІЙ ХІД!" : `Ходить: ${d.players[activeID]?.name}`;
+        
+        const indicator = document.getElementById('turn-indicator');
+        indicator.innerText = myTurn ? "ТВІЙ ХІД!" : `Ходить: ${d.players[activeID]?.name}`;
+        if(myTurn) indicator.classList.add('active-turn'); else indicator.classList.remove('active-turn');
+
         document.getElementById('chat-input').disabled = !myTurn; document.getElementById('send-btn').disabled = !myTurn;
-        document.getElementById('v-list').innerHTML = d.order.filter(id => id !== uID).map(id => `<button class="btn btn-blue" onclick="vote('${id}')" ${myVoted?'disabled':''}>${d.players[id].name}</button>`).join('');
+        
+        // Відображення списку голосування з лічильниками
+        const votes = d.votes || {};
+        document.getElementById('v-list').innerHTML = d.order.filter(id => id !== uID).map(id => {
+            const count = votes[id] || 0;
+            const vBadge = count > 0 ? `<span class="vote-count">${count}</span>` : "";
+            return `<button class="btn btn-blue" onclick="vote('${id}')" ${myVoted?'disabled':''}>${d.players[id].name} ${vBadge}</button>`;
+        }).join('');
     }
 
     function sendMsg() {
@@ -209,9 +242,14 @@
         db.ref('rooms/' + room + '/votes/' + tid).transaction(v => (v||0)+1);
         document.getElementById('v-list').style.display = 'none';
         db.ref('rooms/' + room).once('value', s => {
-            const d = s.val(); let total = 0; if(d.votes) Object.values(d.votes).forEach(v => total += v);
+            const d = s.val(); 
+            let total = 0; 
+            const voteValues = d.votes ? Object.entries(d.votes).filter(([key]) => !key.startsWith('bot_voted_')) : [];
+            voteValues.forEach(([k, v]) => total += v);
+            
             if(total >= d.order.length) {
-                let max = 0, target = ""; Object.keys(d.votes).forEach(id => { if(d.votes[id] > max) { max = d.votes[id]; target = id; } });
+                let max = 0, target = ""; 
+                Object.keys(d.votes).forEach(id => { if(!id.startsWith('bot_voted_') && d.votes[id] > max) { max = d.votes[id]; target = id; } });
                 db.ref('rooms/' + room).update(target === d.spyID ? {winner:'civ', reason:'Шпигуна викрито!'} : {winner:'spy', reason:'Вигнали мирного!'});
             }
         });
@@ -228,8 +266,30 @@
     }
 
     function exitToMainMenu() { if(room) { db.ref('rooms/' + room + '/players/' + uID).remove(); db.ref('rooms/' + room).off(); } room = null; isHost = false; document.getElementById('view-menu').style.display = 'block'; document.getElementById('view-lobby').style.display = 'none'; document.getElementById('view-play').style.display = 'none'; }
-    
     function stopGame() { if(room) db.ref('rooms/' + room).update({ status: 'lobby', winner: null, votes: null }); }
+
+    // АДМІН-ФУНКЦІЯ: ДОДАТИ БОТА
+    function addBot() {
+        if(!room) return;
+        const bID = "bot_" + Math.floor(Math.random()*999);
+        const bNames = ["Артем [BOT]", "Kiler sans [BOT]", "ClashPro", "SuperCell_Fan"];
+        db.ref('rooms/' + room + '/players/' + bID).set({ name: bNames[Math.floor(Math.random()*bNames.length)], rank: "🤖 БОТ", isBot: true });
+    }
+
+    // ЛОГІКА БОТІВ (Голосування)
+    function handleBots(d) {
+        const botIDs = Object.keys(d.players).filter(id => d.players[id].isBot);
+        botIDs.forEach(bid => {
+            if(!d.votes || !d.votes['bot_voted_'+bid]) {
+                setTimeout(() => {
+                    const targets = d.order.filter(id => id !== bid);
+                    const target = targets[Math.floor(Math.random()*targets.length)];
+                    db.ref('rooms/' + room + '/votes/' + target).transaction(v => (v||0)+1);
+                    db.ref('rooms/' + room + '/votes/bot_voted_'+bid).set(true);
+                }, 5000 + Math.random()*5000);
+            }
+        });
+    }
 
     window.onload = () => {
         const grid = document.getElementById('cards-grid'); allCards.forEach(c => { grid.innerHTML += `<div class="card-item" style="font-size:10px; padding:8px;">${c}</div>`; });
