@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy v5.4.9 Admin Pro</title>
+    <title>Clash Spy v5.5.0 Stable</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -16,21 +16,23 @@
         .tab.active { opacity: 1; color: var(--accent); border-bottom: 3px solid var(--accent); }
         .screen { display: none; flex: 1; padding: 15px; overflow-y: auto; }
         .active-screen { display: flex; flex-direction: column; }
-        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; color: white; cursor: pointer; margin-bottom: 8px; }
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; color: white; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .btn-blue { background: var(--blue); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
         input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #2d3748; background: #111827; color: white; text-align: center; margin-bottom: 10px; }
         .card-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid #2d3748; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .v-badge { background: var(--red); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 10px; }
+        .v-badge { background: var(--red); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
         #chat-stream { flex: 1; background: #05070a; border-radius: 12px; padding: 10px; margin: 10px 0; overflow-y: auto; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 8px; }
-        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; background: #1e293b; font-size: 14px; align-self: flex-start; }
+        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; background: #1e293b; font-size: 14px; }
         .msg-bubble.mine { align-self: flex-end; border-right: 3px solid var(--blue); background: #26334d; }
         #turn-indicator { text-align: center; font-size: 12px; padding: 8px; color: var(--accent); font-weight: bold; background: rgba(245, 158, 11, 0.1); border-radius: 8px; }
         
-        /* АДМІНКА 2.0 */
+        /* ADM */
         #adm-btn { position: fixed; bottom: 80px; right: 20px; width: 45px; height: 45px; background: var(--accent); border-radius: 50%; display: none; align-items: center; justify-content: center; z-index: 1000; font-size: 20px; }
-        #adm-panel { position: fixed; bottom: 135px; right: 20px; width: 260px; background: #1e293b; border: 2px solid var(--accent); border-radius: 15px; padding: 15px; display: none; z-index: 1001; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .adm-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
-        .adm-t { flex: 1; text-align: center; font-size: 10px; cursor: pointer; opacity: 0.5; padding: 5px; font-weight: bold; }
+        #adm-panel { position: fixed; bottom: 135px; right: 20px; width: 260px; background: #1e293b; border: 2px solid var(--accent); border-radius: 15px; padding: 15px; display: none; z-index: 1001; }
+        .adm-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #444; }
+        .adm-t { flex: 1; text-align: center; font-size: 10px; cursor: pointer; opacity: 0.5; padding: 5px; }
         .adm-t.active { opacity: 1; color: var(--accent); border-bottom: 2px solid var(--accent); }
         
         #toast { position: fixed; top: -100px; left: 15px; right: 15px; padding: 15px; border-radius: 12px; text-align: center; z-index: 10000; transition: 0.5s; font-weight: bold; }
@@ -44,16 +46,14 @@
 <div id="adm-btn" onclick="toggleAdm()">⚙️</div>
 <div id="adm-panel">
     <div class="adm-tabs">
-        <div class="adm-t active" id="t-info" onclick="setAdmTab('info')">ІНФОРМАЦІЯ</div>
+        <div class="adm-t active" id="t-info" onclick="setAdmTab('info')">ІНФО</div>
         <div class="adm-t" id="t-ctrl" onclick="setAdmTab('ctrl')">КЕРУВАННЯ</div>
-        <div onclick="toggleAdm()" style="cursor:pointer; margin-left: auto;">✕</div>
+        <div onclick="toggleAdm()" style="margin-left:auto; cursor:pointer;">✕</div>
     </div>
-    <div id="adm-content-info" style="font-size:12px;">
-        <div id="adm-stats">Чекаємо гри...</div>
-    </div>
+    <div id="adm-content-info"><div id="adm-stats">Немає даних</div></div>
     <div id="adm-content-ctrl" style="display:none;">
-        <button class="btn btn-blue" style="font-size:11px;" onclick="addBot()">+ ДОДАТИ БОТА</button>
-        <button class="btn btn-red" style="font-size:11px;" onclick="forceNext()">ПРОПУСТИТИ ХІД</button>
+        <button class="btn btn-blue" style="padding:8px; font-size:10px;" onclick="addBot()">+ БОТ</button>
+        <button class="btn btn-red" style="padding:8px; font-size:10px;" onclick="forceNext()">СКИД ХОДУ</button>
     </div>
 </div>
 
@@ -65,19 +65,19 @@
 
 <div id="scr-game" class="screen active-screen">
     <div id="view-menu">
-        <h1 onclick="devMode()" style="text-align:center; color:var(--accent); margin: 30px 0; cursor:pointer;">CLASH SPY</h1>
+        <h1 onclick="devMode()" style="text-align:center; color:var(--accent); margin: 30px 0;">CLASH SPY</h1>
         <button class="btn btn-green" onclick="createRoom()">СТВОРИТИ КІМНАТУ</button>
         <input type="number" id="room-input" placeholder="Код">
         <button class="btn btn-blue" onclick="joinRoom()">ПРИЄДНАТИСЯ</button>
     </div>
 
     <div id="view-lobby" style="display:none;">
-        <div class="card-item" style="flex-direction:column; background: rgba(59, 130, 246, 0.1);">
+        <div class="card-item" style="flex-direction:column; border: 2px solid var(--blue);">
             <small>ID КІМНАТИ:</small>
             <h2 id="room-id-txt" style="color:var(--accent); font-size:32px;">----</h2>
         </div>
         <div id="lobby-players"></div>
-        <button id="start-btn" class="btn btn-blue" style="display:none; margin-top:15px;" onclick="startGame()">ПОЧАТИ ГРУ</button>
+        <button id="start-btn" class="btn btn-blue" style="display:none; margin-top:20px;" onclick="startGame()">ПОЧАТИ</button>
     </div>
 
     <div id="view-play" style="display:none; flex-direction:column; height: 100%;">
@@ -85,7 +85,7 @@
         <div id="turn-indicator">Завантаження...</div>
         <div id="chat-stream"></div>
         <div style="display:flex; gap:8px;">
-            <input type="text" id="chat-input" placeholder="Ваше питання..." onkeydown="if(event.key==='Enter') sendMsg()">
+            <input type="text" id="chat-input" placeholder="Ваш текст..." onkeydown="if(event.key==='Enter') sendMsg()">
             <button id="send-btn" class="btn btn-blue" style="width:60px; margin:0;" onclick="sendMsg()">➜</button>
         </div>
         <div style="display:flex; gap:10px; margin-top:10px;">
@@ -108,15 +108,15 @@
 
     const allCards = ["П.Е.К.К.А", "Мегалицар", "Магічний лучник", "Спаркі", "Хог", "Бревно", "Шахтар", "Відьма", "Принцеса", "Електричний маг", "Плазмовий дракон", "Рицар", "Гігант", "Скелети", "Кулька", "Мушкетер", "Кат", "Торнадо", "Всадниця на барані", "Елітний варвар", "Королівський гігант", "Арбалет", "Мортира", "Гоблінська бочка", "Громовержець", "Нічна відьма", "Крижаний маг", "Бандитка", "Привид", "Рибалка", "Мати-відьма", "Золотий лицар", "Король скелетів", "Королева лучниць", "Монах", "Маленький дракон", "Армія скелетів", "Голем", "Електрогігант", "Фенікс", "Маленький принц"];
 
-    let room = null, isHost = false, myVoted = false, dClicks = 0;
+    let room = null, isHost = false, myVoted = false, myGuessed = false, dClicks = 0;
 
-    function devMode() { dClicks++; if(dClicks >= 5) { document.getElementById('adm-btn').style.display = 'flex'; dClicks = 0; } }
-    function toggleAdm() { const p = document.getElementById('adm-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
+    function devMode() { dClicks++; if(dClicks >= 5) { document.getElementById('adm-btn').style.display='flex'; dClicks=0; } }
+    function toggleAdm() { const p = document.getElementById('adm-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
     function setAdmTab(t) {
-        document.getElementById('adm-content-info').style.display = t === 'info' ? 'block' : 'none';
-        document.getElementById('adm-content-ctrl').style.display = t === 'ctrl' ? 'block' : 'none';
-        document.getElementById('t-info').classList.toggle('active', t === 'info');
-        document.getElementById('t-ctrl').classList.toggle('active', t === 'ctrl');
+        document.getElementById('adm-content-info').style.display = t==='info'?'block':'none';
+        document.getElementById('adm-content-ctrl').style.display = t==='ctrl'?'block':'none';
+        document.getElementById('t-info').className = 'adm-t ' + (t==='info'?'active':'');
+        document.getElementById('t-ctrl').className = 'adm-t ' + (t==='ctrl'?'active':'');
     }
 
     function switchTab(id, el) {
@@ -127,7 +127,7 @@
     }
 
     async function createRoom() {
-        room = Math.floor(1000 + Math.random() * 8999).toString();
+        room = Math.floor(1000 + Math.random()*8999).toString();
         isHost = true;
         await db.ref('rooms/' + room).set({ host: uID, status: 'lobby', turnIdx: 0 });
         initRoom();
@@ -149,25 +149,23 @@
             const d = snap.val(); if(!d) return;
             const ids = Object.keys(d.players);
             
-            // Лобі та Голоси
-            const plist = document.getElementById('lobby-players');
-            plist.innerHTML = ids.map(id => {
+            // Лобі + Голоси
+            document.getElementById('lobby-players').innerHTML = ids.map(id => {
                 const v = (d.votes && d.votes[id]) ? d.votes[id] : 0;
-                return `<div class="card-item"><span>👤 ${d.players[id].name}</span>${v > 0 ? `<span class="v-badge">${v}</span>` : ''}</div>`;
+                return `<div class="card-item"><span>👤 ${d.players[id].name}</span> ${v>0?`<span class="v-badge">${v}</span>`:''}</div>`;
             }).join('');
 
             // Адмін інфо
-            const spyName = d.players[d.spyID]?.name || "Не призначено";
-            document.getElementById('adm-stats').innerHTML = `<b>Код:</b> ${room}<br><b>Карта:</b> ${d.cardName || '---'}<br><b>Шпигун:</b> <span style="color:var(--red)">${spyName}</span>`;
+            document.getElementById('adm-stats').innerHTML = `<b>Карта:</b> ${d.cardName||'?'}<br><b>Шпигун:</b> <span style="color:var(--red)">${d.players[d.spyID]?.name||'?'}</span>`;
 
-            if(isHost) { document.getElementById('start-btn').style.display = 'block'; document.getElementById('start-btn').disabled = ids.length < 2; }
+            if(isHost) { document.getElementById('start-btn').style.display='block'; document.getElementById('start-btn').disabled = ids.length < 2; }
             if(d.status === 'started') renderGame(d);
             if(d.winner) showEnd(d.winner, d.reason);
         });
 
         db.ref('rooms/' + room + '/chat').on('value', s => {
             const stream = document.getElementById('chat-stream'); stream.innerHTML = "";
-            s.forEach(m => { stream.innerHTML += `<div class="msg-bubble ${m.val().uid === uID?'mine':''}"><b>${m.val().u}:</b><br>${m.val().m}</div>`; });
+            s.forEach(m => { stream.innerHTML += `<div class="msg-bubble ${m.val().uid===uID?'mine':''}"><b>${m.val().u}:</b><br>${m.val().m}</div>`; });
             stream.scrollTop = stream.scrollHeight;
         });
     }
@@ -179,8 +177,7 @@
                 status: 'started', 
                 spyID: ids[Math.floor(Math.random()*ids.length)], 
                 cardName: allCards[Math.floor(Math.random()*allCards.length)], 
-                turnIdx: 0, 
-                order: ids 
+                turnIdx: 0, order: ids 
             });
         });
     }
@@ -213,6 +210,21 @@
         });
     }
 
+    // ВИПРАВЛЕНО: Жорсткий захист від мульти-кліку
+    function guess(c) {
+        if(myGuessed) return; // Пряма заборона на повторне виконання
+        myGuessed = true; 
+        
+        // Візуально вимикаємо всі кнопки
+        const btns = document.querySelectorAll('#g-list button');
+        btns.forEach(b => { b.disabled = true; b.style.opacity = "0.2"; });
+        
+        db.ref('rooms/' + room).once('value', s => {
+            const correct = c === s.val().cardName;
+            db.ref('rooms/' + room).update(correct ? {winner:'spy', reason:'Шпигун вгадав карту!'} : {winner:'civ', reason:'Шпигун помилився!'});
+        });
+    }
+
     function vote(tid) {
         if(myVoted) return; myVoted = true;
         db.ref('rooms/' + room + '/votes/' + tid).transaction(v => (v||0)+1);
@@ -221,22 +233,16 @@
         db.ref('rooms/' + room).once('value', s => {
             const d = s.val(); let total = 0; if(d.votes) Object.values(d.votes).forEach(v => total += v);
             if(total >= d.order.length) {
-                let max = 0, winnerID = "";
-                Object.keys(d.votes).forEach(id => { if(d.votes[id] > max) { max = d.votes[id]; winnerID = id; } });
-                db.ref('rooms/' + room).update(winnerID === d.spyID ? {winner:'civ', reason:'Шпигуна викрито!'} : {winner:'spy', reason:'Вигнали не того!'});
+                let max = 0, target = "";
+                Object.keys(d.votes).forEach(id => { if(d.votes[id] > max) { max = d.votes[id]; target = id; } });
+                db.ref('rooms/' + room).update(target === d.spyID ? {winner:'civ', reason:'Шпигуна викрито!'} : {winner:'spy', reason:'Вигнали не того!'});
             }
-        });
-    }
-
-    function guess(c) {
-        db.ref('rooms/' + room).once('value', s => {
-            db.ref('rooms/' + room).update(c === s.val().cardName ? {winner:'spy', reason:'Шпигун вгадав карту!'} : {winner:'civ', reason:'Шпигун помилився!'});
         });
     }
 
     function showEnd(w, r) {
         const t = document.getElementById('toast');
-        const won = (w === 'spy' && document.getElementById('role-info').innerText.includes("ШПИГУН")) || (w === 'civ' && !document.getElementById('role-info').innerText.includes("ШПИГУН"));
+        const won = (w==='spy' && document.getElementById('role-info').innerText.includes("ШПИГУН")) || (w==='civ' && !document.getElementById('role-info').innerText.includes("ШПИГУН"));
         t.innerText = (won ? "ПЕРЕМОГА: " : "ПОРАЗКА: ") + r;
         t.style.background = won ? 'var(--green)' : 'var(--red)';
         t.classList.add('active');
