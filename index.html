@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy Admin Fix</title>
+    <title>Clash Spy Final Fix</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,30 +11,18 @@
         :root { --bg: #0b101b; --card: #1c2538; --accent: #f59e0b; --blue: #3b82f6; --red: #ef4444; --green: #10b981; --text: #e2e8f0; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        
-        /* Фікс верстки */
         .tab-bar { display: flex; background: #161f32; border-bottom: 1px solid #2d3748; min-height: 50px; flex-shrink: 0; }
         .tab { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; opacity: 0.5; color: white; }
         .tab.active { opacity: 1; border-bottom: 3px solid var(--accent); color: var(--accent); }
-
         .screen { display: none; flex: 1; width: 100%; flex-direction: column; padding: 15px; overflow-y: auto; }
         .active-screen { display: flex; }
-
-        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; margin: 5px 0; font-size: 14px; color: white; text-transform: uppercase; box-shadow: 0 4px 0 rgba(0,0,0,0.3); flex-shrink: 0; }
-        .btn-blue { background: var(--blue); }
-        .btn-green { background: var(--green); }
-        .btn-red { background: var(--red); }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
-        
-        /* Ввід коду - тепер працює */
-        input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #2d3748; background: #111827 !important; color: white !important; font-size: 18px; text-align: center; outline: none; margin-bottom: 10px; -webkit-appearance: none; }
-
-        .card-display { background: var(--card); border-radius: 15px; padding: 15px; text-align: center; border: 2px solid var(--accent); margin-bottom: 10px; flex-shrink: 0; }
-        
-        /* Адмін панель */
-        #admin-panel { position: fixed; top: 0; left: 0; right: 0; background: #2d3748; z-index: 1000; padding: 10px; border-bottom: 2px solid var(--accent); display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-
-        #chat-window { flex: 1; min-height: 100px; background: #05070a; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #1a2236; font-size: 13px; }
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; margin: 5px 0; font-size: 14px; color: white; text-transform: uppercase; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+        .btn-blue { background: var(--blue); } .btn-green { background: var(--green); } .btn-red { background: var(--red); }
+        input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #2d3748; background: #111827 !important; color: white !important; font-size: 18px; text-align: center; margin-bottom: 10px; }
+        .card-display { background: var(--card); border-radius: 15px; padding: 15px; text-align: center; border: 2px solid var(--accent); margin-bottom: 10px; }
+        #admin-panel { position: fixed; top: 0; left: 0; right: 0; background: #2d3748; z-index: 1000; padding: 10px; border-bottom: 2px solid var(--accent); display: none; }
+        #chat-window { flex: 1; background: #05070a; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #1a2236; font-size: 13px; }
+        .msg { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; color: white; }
         .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; }
         .rank-item.me { border: 1px solid var(--accent); background: rgba(245, 158, 11, 0.2); }
     </style>
@@ -42,12 +30,12 @@
 <body>
 
     <div id="admin-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <b style="color:var(--accent); font-size:12px;">ADMIN TOOLS</b>
-            <button onclick="toggleAdmin()" style="background:none; border:none; color:white;">✖</button>
+        <div style="display:flex; justify-content:space-between;">
+            <b style="color:var(--accent);">ADMIN MODE</b>
+            <button onclick="toggleAdmin()" style="color:white; background:none; border:none;">✖</button>
         </div>
-        <button class="btn btn-blue" style="padding:5px; font-size:10px; height:30px;" onclick="addTestBot()">+ ДОДАТИ ТЕСТ-БОТА</button>
-        <div id="admin-info" style="font-size:11px; margin-top:5px; max-height:60px; overflow:auto; color:#99ecff;"></div>
+        <button class="btn btn-blue" style="padding:5px; height:35px; font-size:10px;" onclick="addTestBot()">+ ДОДАТИ БОТА</button>
+        <div id="admin-info" style="font-size:11px; margin-top:5px; color:#00ff00;"></div>
     </div>
 
     <div class="tab-bar">
@@ -60,41 +48,37 @@
         <div id="menu-area">
             <h2 style="text-align:center; color:var(--accent);">CLASH SPY 🕵️</h2>
             <button class="btn btn-green" onclick="createLobby()">Створити кімнату</button>
-            <div style="margin-top:20px;">
-                <input type="number" id="lobby-input" placeholder="Код лобі" inputmode="numeric">
+            <div style="margin-top:15px;">
+                <input type="number" id="lobby-input" placeholder="Код лобі">
                 <button class="btn btn-blue" onclick="joinLobby()">Приєднатися</button>
             </div>
-            <p onclick="secretClick()" style="text-align:center; opacity:0.2; font-size:10px; margin-top:50px;">ВЕРСІЯ 1.0.5</p>
+            <p onclick="secretClick()" style="text-align:center; opacity:0.1; font-size:10px; margin-top:40px;">ВЕРСІЯ 1.1.0</p>
         </div>
 
         <div id="lobby-area" style="display:none; flex-direction:column; height:100%;">
-            <div style="text-align:center;">
-                <span style="font-size:12px; opacity:0.6;">КОД:</span>
-                <h1 id="room-code-label" style="color:var(--accent); margin:0; font-size:40px;">----</h1>
-            </div>
-            <div id="player-list" style="flex:1; margin:15px 0; overflow-y:auto;"></div>
-            <button id="start-btn" class="btn btn-blue" onclick="startGame()" style="display:none;">ПОЧАТИ ГРУ</button>
-            <button class="btn btn-red" onclick="location.reload()" style="background:none; box-shadow:none;">ВИЙТИ</button>
+            <h1 id="room-code-label" style="text-align:center; color:var(--accent); margin:0;">----</h1>
+            <div id="player-list" style="flex:1; margin:10px 0; overflow-y:auto;"></div>
+            <button id="start-btn" class="btn btn-blue" onclick="startGame()" style="display:none;">ПОЧАТИ</button>
+            <button class="btn btn-red" onclick="location.reload()" style="background:none;">ВИЙТИ</button>
         </div>
 
         <div id="play-area" style="display:none; flex-direction:column; height:100%;">
             <div class="card-display" id="role-card"></div>
             <div id="chat-window"></div>
-            <div style="display: flex; gap: 5px;">
-                <input type="text" id="chat-input" placeholder="Питання..." style="flex: 1; margin: 0; font-size:14px; text-align:left;">
-                <button class="btn btn-blue" onclick="sendMsg()" style="width: 50px; margin: 0; padding: 0;">➜</button>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="chat-input" placeholder="Ваше питання..." style="flex:1; margin:0; text-align:left; font-size:14px;">
+                <button class="btn btn-blue" onclick="sendMsg()" style="width:50px; margin:0;">➜</button>
             </div>
-            <button id="finish-btn" class="btn btn-red" onclick="finishGameAction()" style="display:none; margin-top:10px;">ЗАВЕРШИТИ ГРУ</button>
+            <button id="finish-btn" class="btn btn-red" onclick="finishGameAction()" style="display:none; margin-top:5px;">ЗАВЕРШИТИ</button>
         </div>
     </div>
 
     <div id="scr-profile" class="screen">
-        <h2 style="color:var(--accent)">Твій Профіль</h2>
-        <div class="card-display" id="prof-card">Завантаження...</div>
+        <div class="card-display" id="prof-card"></div>
     </div>
 
     <div id="scr-leaderboard" class="screen">
-        <h2 style="color:var(--accent)">ТОП-100 ГРАВЦІВ</h2>
+        <h2 style="color:var(--accent)">ТОП-100</h2>
         <div id="rank-list"></div>
     </div>
 
@@ -102,35 +86,26 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    const firebaseConfig = { 
-        databaseURL: "https://carvain7-48b13-default-rtdb.europe-west1.firebasedatabase.app/" 
-    };
-    
+    const firebaseConfig = { databaseURL: "https://carvain7-48b13-default-rtdb.europe-west1.firebasedatabase.app/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const user = tg.initDataUnsafe?.user;
-    const uID = (user?.id || "dev_" + Math.floor(Math.random()*999)).toString();
-    const uName = user?.first_name || user?.username || "Гравець";
+    const uID = (tg.initDataUnsafe?.user?.id || "dev_" + Math.floor(Math.random()*999)).toString();
+    const uName = tg.initDataUnsafe?.user?.first_name || "Гравець";
     
     let roomID = null;
     let isHost = false;
     let clickCount = 0;
 
-    // Оновлення рейтингу
     db.ref('users/' + uID).update({ name: uName });
     db.ref('users/' + uID).on('value', snap => {
         const d = snap.val() || { wins: 0 };
-        document.getElementById('prof-card').innerHTML = `<h3>${uName}</h3><div style="font-size:35px;">🏆 ${d.wins || 0}</div>`;
+        document.getElementById('prof-card').innerHTML = `<h3>${uName}</h3><div style="font-size:30px;">🏆 ${d.wins || 0}</div>`;
     });
 
     function secretClick() {
         clickCount++;
-        if(clickCount >= 5) {
-            toggleAdmin();
-            clickCount = 0;
-            tg.HapticFeedback.notificationOccurred('success');
-        }
+        if(clickCount >= 5) { toggleAdmin(); clickCount = 0; }
     }
 
     function toggleAdmin() {
@@ -153,12 +128,13 @@
             let arr = [];
             snap.forEach(c => {
                 let p = c.val();
-                arr.push({ id: c.key, name: p.name, wins: p.wins || 0 });
+                if(p.name && p.name !== "undefined") {
+                    arr.push({ id: c.key, name: p.name, wins: p.wins || 0 });
+                }
             });
             arr.sort((a,b) => b.wins - a.wins);
             arr.forEach((p, i) => {
-                let isMe = p.id === uID ? "me" : "";
-                list.innerHTML += `<div class="rank-item ${isMe}"><span>${i+1}. ${p.name}</span><span>🏆 ${p.wins}</span></div>`;
+                list.innerHTML += `<div class="rank-item ${p.id === uID ? 'me' : ''}"><span>${i+1}. ${p.name}</span><span>🏆 ${p.wins}</span></div>`;
             });
         });
     }
@@ -174,7 +150,7 @@
         const val = document.getElementById('lobby-input').value;
         if(!val) return;
         const snap = await db.ref('rooms/' + val).once('value');
-        if(!snap.exists()) return alert("Кімнату не знайдено!");
+        if(!snap.exists()) return alert("Не знайдено!");
         roomID = val; isHost = false;
         setupRoom();
     }
@@ -185,30 +161,37 @@
         document.getElementById('room-code-label').innerText = roomID;
         db.ref('rooms/' + roomID + '/players/' + uID).set({ name: uName });
 
+        // ВИПРАВЛЕНО: Черга гравців
         db.ref('rooms/' + roomID + '/players').on('value', snap => {
             const l = document.getElementById('player-list');
-            l.innerHTML = ""; let c = 0;
-            snap.forEach(p => { c++; l.innerHTML += `<div class="rank-item">👤 ${p.val().name}</div>`; });
+            l.innerHTML = ""; 
+            let count = 0;
+            snap.forEach(p => {
+                count++;
+                l.innerHTML += `<div class="rank-item">👤 ${p.val().name}</div>`;
+            });
             if(isHost) {
                 let b = document.getElementById('start-btn');
-                b.style.display = 'block'; b.disabled = c < 2;
+                b.style.display = 'block'; 
+                b.disabled = count < 2;
             }
         });
 
-        db.ref('rooms/' + roomID).on('value', snap => {
-            const d = snap.val();
-            if(d && d.status === 'started') renderGame(d);
+        db.ref('rooms/' + roomID + '/status').on('value', snap => {
+            if(snap.val() === 'started') {
+                db.ref('rooms/' + roomID).once('value', s => renderGame(s.val()));
+            }
         });
     }
 
     function addTestBot() {
-        if(!roomID) return alert("Спершу створи лобі!");
-        const botID = "bot_" + Math.floor(Math.random()*9999);
-        db.ref('rooms/' + roomID + '/players/' + botID).set({ name: "🤖 Бот " + botID });
+        if(!roomID) return;
+        const bID = "bot_" + Math.floor(Math.random()*999);
+        db.ref('rooms/' + roomID + '/players/' + bID).set({ name: "🤖 Бот " + bID });
     }
 
     function startGame() {
-        const cards = ["Магічний лучник", "Мегалицар", "П.Е.К.К.А", "Хог", "Спаркі"];
+        const cards = ["П.Е.К.К.А", "Мегалицар", "Магічний лучник", "Спаркі"];
         const card = cards[Math.floor(Math.random()*cards.length)];
         db.ref('rooms/' + roomID + '/players').once('value', snap => {
             let ids = []; snap.forEach(p => ids.push(p.key));
@@ -220,39 +203,39 @@
     function renderGame(data) {
         document.getElementById('lobby-area').style.display = 'none';
         document.getElementById('play-area').style.display = 'flex';
-        const isSpy = data.spyID === uID;
-        document.getElementById('role-card').innerHTML = isSpy ? "<h2 style='color:var(--red)'>ТИ ШПИГУН 🕵️</h2>" : `<p>КАРТА:</p><h2 style='color:var(--green)'>${data.cardName}</h2>`;
         
+        const isSpy = data.spyID === uID;
+        document.getElementById('role-card').innerHTML = isSpy ? "<h2 style='color:var(--red)'>ШПИГУН 🕵️</h2>" : `<h2>${data.cardName}</h2>`;
         if(isHost) document.getElementById('finish-btn').style.display = 'block';
 
-        // Адмін-інфо (хто є хто)
+        // ВИПРАВЛЕНО: Адмін бачить ролі ботів
         const info = document.getElementById('admin-info');
         db.ref('rooms/' + roomID + '/players').once('value', snap => {
-            let res = "<b>СЕКРЕТНО:</b> ";
-            snap.forEach(p => {
-                if(p.key === data.spyID) res += `<span style="color:var(--red)">${p.val().name} (ШПИГУН)</span>`;
-            });
-            info.innerHTML = res;
+            let spyName = "";
+            snap.forEach(p => { if(p.key === data.spyID) spyName = p.val().name; });
+            info.innerHTML = `ШПИГУН: <b>${spyName}</b>`;
         });
 
-        db.ref('rooms/' + roomID + '/chat').off();
+        // ВИПРАВЛЕНО: Дублювання чату
+        const chatWin = document.getElementById('chat-window');
+        chatWin.innerHTML = "";
+        db.ref('rooms/' + roomID + '/chat').off(); // Вбиваємо старого слухача
         db.ref('rooms/' + roomID + '/chat').on('child_added', snap => {
             const m = snap.val();
-            const w = document.getElementById('chat-window');
-            w.innerHTML += `<div class="msg"><b>${m.u}:</b> ${m.msg}</div>`;
-            w.scrollTop = w.scrollHeight;
+            chatWin.innerHTML += `<div class="msg"><b>${m.u}:</b> ${m.msg}</div>`;
+            chatWin.scrollTop = chatWin.scrollHeight;
         });
     }
 
     function sendMsg() {
         const i = document.getElementById('chat-input');
-        if(!i.value) return;
+        if(!i.value.trim()) return;
         db.ref('rooms/' + roomID + '/chat').push({ u: uName, msg: i.value });
         i.value = "";
     }
 
     function finishGameAction() {
-        const win = prompt("Ім'я переможця (точно як у списку):");
+        const win = prompt("Ім'я переможця:");
         if(!win) return;
         db.ref('rooms/' + roomID + '/players').once('value', snap => {
             snap.forEach(p => {
