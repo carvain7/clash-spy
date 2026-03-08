@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy v5.6.2 Professional</title>
+    <title>Clash Spy v5.6.3 Admin Back</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -22,6 +22,11 @@
         input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #2d3748; background: #111827; color: white; text-align: center; margin-bottom: 10px; }
         .card-item { background: var(--card); padding: 12px; border-radius: 12px; border: 1px solid #2d3748; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .rank-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(245, 158, 11, 0.2); color: var(--accent); margin-left: 8px; border: 1px solid var(--accent); }
+        
+        /* СТИЛІ ПАНЕЛІ */
+        #adm-btn { position: fixed; bottom: 80px; right: 20px; width: 45px; height: 45px; background: var(--accent); border-radius: 50%; display: none; align-items: center; justify-content: center; z-index: 1000; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #adm-panel { position: fixed; bottom: 135px; right: 20px; width: 260px; background: #1e293b; border: 2px solid var(--accent); border-radius: 15px; padding: 15px; display: none; z-index: 1001; }
+        
         #chat-stream { flex: 1; background: #05070a; border-radius: 12px; padding: 10px; margin: 10px 0; overflow-y: auto; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 8px; }
         .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; background: #1e293b; font-size: 14px; }
         .msg-bubble.mine { align-self: flex-end; border-right: 3px solid var(--blue); background: #26334d; }
@@ -35,6 +40,13 @@
 
 <div id="toast"></div>
 
+<div id="adm-btn" onclick="toggleAdm()">⚙️</div>
+<div id="adm-panel">
+    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; font-weight:bold;"><span>ADMIN TOOLS</span><span onclick="toggleAdm()" style="cursor:pointer;">✕</span></div>
+    <div id="adm-data-display" style="font-size:11px; margin-bottom:10px; color: #cbd5e1;"></div>
+    <button class="btn btn-red" style="padding:8px; font-size:10px;" onclick="stopGame()">СКИНУТИ В ЛОБІ</button>
+</div>
+
 <div class="tab-bar">
     <div class="tab active" onclick="switchTab('game', this)">ГРА</div>
     <div class="tab" onclick="switchTab('cards', this)">КАРТИ</div>
@@ -43,7 +55,7 @@
 
 <div id="scr-game" class="screen active-screen">
     <div id="view-menu">
-        <h1 style="text-align:center; color:var(--accent); margin: 30px 0;">CLASH SPY</h1>
+        <h1 onclick="devMode()" style="text-align:center; color:var(--accent); margin: 30px 0; cursor: pointer; user-select: none;">CLASH SPY</h1>
         <button class="btn btn-green" onclick="createRoom()">СТВОРИТИ КІМНАТУ</button>
         <input type="number" id="room-input" placeholder="Код кімнати">
         <button class="btn btn-blue" onclick="joinRoom()">ПРИЄДНАТИСЯ</button>
@@ -74,20 +86,34 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    // Налаштування Firebase (твої дані)
     const db = firebase.initializeApp({ databaseURL: "https://carvain7-48b13-default-rtdb.europe-west1.firebasedatabase.app/" }).database();
     const uID = (tg.initDataUnsafe?.user?.id || "u"+Math.floor(Math.random()*999)).toString();
     const uName = tg.initDataUnsafe?.user?.first_name || "Гравець";
 
     const allCards = ["П.Е.К.К.А", "Мегалицар", "Магічний лучник", "Спаркі", "Хог", "Бревно", "Шахтар", "Відьма", "Принцеса", "Електричний маг", "Плазмовий дракон", "Рицар", "Гігант", "Скелети", "Кулька", "Мушкетер", "Кат", "Торнадо", "Всадниця на барані", "Елітний варвар", "Королівський гігант", "Арбалет", "Мортира", "Гоблінська бочка", "Громовержець", "Нічна відьма", "Крижаний маг", "Бандитка", "Привид", "Рибалка", "Мати-відьма", "Золотий лицар", "Король скелетів", "Королева лучниць", "Монах", "Маленький дракон", "Армія скелетів", "Голем", "Електрогігант", "Фенікс", "Маленький принц", "Еліксирний голем", "Темний лицар", "Мисливець", "Вишибала", "Бойовий таран", "Пекельна вежа", "Три мушкетери", "Гармата", "Тесла", "Ракетниця", "Скелет у бочці", "Королівські кабани", "Рама", "Фургон", "Варварська бочка", "Землетрус", "Сніжок", "Яд", "Блискавка", "Ракета", "Клон", "Дзеркало", "Ярость", "Зап", "Стріли", "Вогняна куля", "Бомбер", "Дух вогню", "Дух льоду", "Дух електро", "Дух зцілення", "Кажани", "Мухи", "Орда мух", "Варвари", "Міньйони", "Гобліни", "Лучники", "Списники", "Гоблін з дротиками", "Стінобої", "Гаргулья", "Охоронці", "Принц", "Темний принц", "Гоблін-гігант", "Електродракон", "Лавова гонча", "Льодяний голем"];
 
-    let room = null, isHost = false, myVoted = false, myGuessed = false, myWins = 0;
+    let room = null, isHost = false, myVoted = false, myGuessed = false, dClicks = 0, myWins = 0;
 
     function getRank(w) {
         if(w >= 15) return "👑 Король";
         if(w >= 10) return "⚔️ Майстер";
         if(w >= 5) return "🛡️ Лицар";
         return "🌱 Новачок";
+    }
+
+    // ФУНКЦІЯ АКТИВАЦІЇ АДМІНКИ
+    function devMode() { 
+        dClicks++; 
+        if(dClicks >= 5) { 
+            document.getElementById('adm-btn').style.display = 'flex'; 
+            dClicks = 0; 
+            tg.HapticFeedback.notificationOccurred('success');
+        } 
+    }
+    
+    function toggleAdm() { 
+        const p = document.getElementById('adm-panel'); 
+        p.style.display = p.style.display==='block'?'none':'block'; 
     }
 
     function switchTab(id, el) {
@@ -116,6 +142,10 @@
             document.getElementById('lobby-players').innerHTML = ids.map(id => {
                 return `<div class="card-item"><span>👤 ${d.players[id].name} <span class="rank-badge">${d.players[id].rank || 'Новачок'}</span></span></div>`;
             }).join('');
+            
+            // ДАНІ ДЛЯ АДМІНКИ
+            document.getElementById('adm-data-display').innerHTML = `Карта: ${d.cardName||'?'}<br>Шпигун ID: ${d.spyID||'немає'}`;
+            
             if(isHost) { const sBtn = document.getElementById('start-btn'); sBtn.style.display='block'; sBtn.disabled = ids.length < 3; }
             if(d.status === 'started') { document.getElementById('view-lobby').style.display = 'none'; document.getElementById('view-play').style.display = 'flex'; renderGame(d); }
             else { document.getElementById('view-lobby').style.display = 'block'; document.getElementById('view-play').style.display = 'none'; }
@@ -198,6 +228,8 @@
     }
 
     function exitToMainMenu() { if(room) { db.ref('rooms/' + room + '/players/' + uID).remove(); db.ref('rooms/' + room).off(); } room = null; isHost = false; document.getElementById('view-menu').style.display = 'block'; document.getElementById('view-lobby').style.display = 'none'; document.getElementById('view-play').style.display = 'none'; }
+    
+    function stopGame() { if(room) db.ref('rooms/' + room).update({ status: 'lobby', winner: null, votes: null }); }
 
     window.onload = () => {
         const grid = document.getElementById('cards-grid'); allCards.forEach(c => { grid.innerHTML += `<div class="card-item" style="font-size:10px; padding:8px;">${c}</div>`; });
