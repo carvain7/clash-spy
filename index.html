@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy Voting Edition</title>
+    <title>Clash Spy - Voting System</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -28,16 +28,15 @@
         
         input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #2d3748; background: #111827; color: white; font-size: 16px; text-align: center; outline: none; margin-bottom: 10px; }
 
-        .card-display { background: var(--card); border-radius: 15px; padding: 15px; text-align: center; border: 2px solid var(--accent); margin-bottom: 10px; }
+        .card-display { background: var(--card); border-radius: 15px; padding: 20px; text-align: center; border: 2px solid var(--accent); margin-bottom: 10px; }
         
         #chat-window { flex: 1; min-height: 120px; background: #05070a; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #1a2236; font-size: 13px; }
-        .msg { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        .msg { margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; word-wrap: break-word; }
 
-        .vote-item { display: flex; justify-content: space-between; align-items: center; background: #252f44; padding: 10px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; }
-        .vote-item:hover { background: #2d3a55; }
-        .vote-count { background: var(--accent); color: black; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; }
+        .vote-item { display: flex; justify-content: space-between; align-items: center; background: #252f44; padding: 12px; border-radius: 10px; margin-bottom: 6px; cursor: pointer; }
+        .vote-count { background: var(--accent); color: black; padding: 2px 10px; border-radius: 12px; font-weight: bold; }
 
-        .rank-item { display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 4px; }
+        .rank-item { display: flex; justify-content: space-between; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 5px; }
         .rank-item.me { border: 1px solid var(--accent); background: rgba(245, 158, 11, 0.1); }
     </style>
 </head>
@@ -52,35 +51,38 @@
     <div id="scr-game" class="screen active-screen">
         <div id="menu-area">
             <h2 style="text-align:center; color:var(--accent);">CLASH SPY 🕵️</h2>
-            <button class="btn btn-green" onclick="createLobby()">Створити кімнату</button>
+            <button class="btn btn-green" onclick="createLobby()">СТВОРТИ КІМНАТУ</button>
             <input type="number" id="lobby-input" placeholder="Код кімнати" style="margin-top:15px;">
-            <button class="btn btn-blue" onclick="joinLobby()">Приєднатися</button>
+            <button class="btn btn-blue" onclick="joinLobby()">ПРИЄДНАТИСЯ</button>
         </div>
 
         <div id="lobby-area" style="display:none; flex-direction:column; height:100%;">
-            <h1 id="room-code-label" style="text-align:center; color:var(--accent); font-size: 40px; margin:0;">----</h1>
+            <div style="text-align:center;">
+                <span style="font-size:12px; opacity:0.6;">КОД:</span>
+                <h1 id="room-code-label" style="color:var(--accent); font-size: 40px; margin:0;">----</h1>
+            </div>
             <div id="player-list" style="flex:1; margin:15px 0;"></div>
-            <button id="start-btn" class="btn btn-blue" onclick="startGame()" style="display:none;">Почати битву</button>
-            <button class="btn btn-red" onclick="location.reload()" style="background:none;">Вийти</button>
+            <button id="start-btn" class="btn btn-blue" onclick="startGame()" style="display:none;">ПОЧАТИ БИТВУ</button>
+            <button class="btn btn-red" onclick="location.reload()" style="background:none; box-shadow:none;">ВИЙТИ</button>
         </div>
 
         <div id="play-area" style="display:none; flex-direction:column; height:100%;">
             <div class="card-display" id="role-card"></div>
             
-            <div id="voting-section" style="display:none; margin-bottom:10px;">
-                <p style="text-align:center; font-size:12px; color:var(--accent); font-weight:bold;">ГОЛОСУВАННЯ ЗА ШПИГУНА:</p>
+            <div id="voting-section" style="display:none; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                <p style="text-align:center; font-size:11px; color:var(--accent); margin:0 0 10px 0;">ХТО ШПИГУН?</p>
                 <div id="vote-list"></div>
             </div>
 
             <div id="chat-window"></div>
             
             <div style="display: flex; gap: 5px;">
-                <input type="text" id="chat-input" placeholder="Питання..." style="flex: 1; margin: 0;">
+                <input type="text" id="chat-input" placeholder="Твоє питання..." style="flex: 1; margin: 0;">
                 <button class="btn btn-blue" onclick="sendMsg()" style="width: 50px; margin: 0; padding: 0;">➜</button>
             </div>
             
             <div style="display: flex; gap: 5px; margin-top: 10px;">
-                <button class="btn btn-green" id="vote-toggle-btn" style="flex:1; font-size:12px;" onclick="toggleVoting()">ГОЛОСУВАТИ</button>
+                <button class="btn btn-green" style="flex:1; font-size:12px;" onclick="toggleVoting()">ГОЛОСУВАННЯ</button>
                 <button id="finish-btn" class="btn btn-red" style="display:none; flex:1; font-size:12px;" onclick="finishGameAction()">ЗАВЕРШИТИ</button>
             </div>
         </div>
@@ -92,7 +94,7 @@
     </div>
 
     <div id="scr-leaderboard" class="screen">
-        <h2 style="color:var(--accent)">ТОП ГРАВЦІВ</h2>
+        <h2 style="color:var(--accent)">ТОП-100</h2>
         <div id="rank-list"></div>
     </div>
 
@@ -100,6 +102,7 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // КОНФІГ БАЗИ (БЕЛЬГІЯ)
     const firebaseConfig = { 
         databaseURL: "https://carvain7-48b13-default-rtdb.europe-west1.firebasedatabase.app/" 
     };
@@ -115,12 +118,13 @@
     let isHost = false;
     let hasVoted = false;
 
-    const cards = ["П.Е.К.К.А", "Мегалицар", "Вершник на кабані", "Магічний лучник", "Спаркі", "Відьма", "Кат", "Громовержець"];
+    const cards = ["П.Е.К.К.А", "Мегалицар", "Вершник на кабані", "Магічний лучник", "Спаркі", "Відьма", "Елітні варвари", "Шахтар", "Принцеса", "Хог"];
 
+    // Реєстрація користувача
     db.ref('users/' + uID).update({ name: uName });
     db.ref('users/' + uID).on('value', snap => {
         const d = snap.val() || { wins: 0 };
-        document.getElementById('prof-card').innerHTML = `<h3>${uName}</h3><div style="font-size:30px;">🏆 ${d.wins || 0}</div>`;
+        document.getElementById('prof-card').innerHTML = `<h3>${uName}</h3><div style="font-size:32px;">🏆 ${d.wins || 0}</div><p style="opacity:0.6;">Перемог</p>`;
     });
 
     function switchTab(tabId, el) {
@@ -131,6 +135,7 @@
         if(tabId === 'leaderboard') loadLeaderboard();
     }
 
+    // СТВОРЕННЯ / ВХІД
     async function createLobby() {
         roomID = Math.floor(1000 + Math.random() * 8999).toString();
         isHost = true;
@@ -141,7 +146,7 @@
     async function joinLobby() {
         const val = document.getElementById('lobby-input').value;
         const snap = await db.ref('rooms/' + val).once('value');
-        if(!snap.exists()) return alert("Кімнату не знайдено");
+        if(!snap.exists()) return alert("Кімнату не знайдено!");
         roomID = val; isHost = false;
         setupRoom();
     }
@@ -150,21 +155,29 @@
         document.getElementById('menu-area').style.display = 'none';
         document.getElementById('lobby-area').style.display = 'flex';
         document.getElementById('room-code-label').innerText = roomID;
+        
         db.ref('rooms/' + roomID + '/players/' + uID).set({ name: uName });
 
+        // Черга гравців в реальному часі
         db.ref('rooms/' + roomID + '/players').on('value', snap => {
-            const l = document.getElementById('player-list');
-            l.innerHTML = ""; let c = 0;
-            snap.forEach(p => { c++; l.innerHTML += `<div class="rank-item">👤 ${p.val().name}</div>`; });
+            const list = document.getElementById('player-list');
+            list.innerHTML = "";
+            let count = 0;
+            snap.forEach(p => {
+                count++;
+                list.innerHTML += `<div class="rank-item">👤 ${p.val().name}</div>`;
+            });
             if(isHost) {
-                let b = document.getElementById('start-btn');
-                b.style.display = 'block'; b.disabled = c < 2;
+                const b = document.getElementById('start-btn');
+                b.style.display = 'block';
+                b.disabled = count < 2;
             }
         });
 
+        // Стан гри
         db.ref('rooms/' + roomID).on('value', snap => {
-            const d = snap.val();
-            if(d && d.status === 'started') renderGame(d);
+            const data = snap.val();
+            if(data && data.status === 'started') renderGame(data);
         });
     }
 
@@ -173,78 +186,84 @@
         db.ref('rooms/' + roomID + '/players').once('value', snap => {
             let ids = []; snap.forEach(p => ids.push(p.key));
             const spy = ids[Math.floor(Math.random()*ids.length)];
-            db.ref('rooms/' + roomID).update({ status: 'started', spyID: spy, cardName: card });
+            db.ref('rooms/' + roomID).update({ 
+                status: 'started', 
+                spyID: spy, 
+                cardName: card,
+                votes: {} 
+            });
         });
     }
 
     function renderGame(data) {
         document.getElementById('lobby-area').style.display = 'none';
         document.getElementById('play-area').style.display = 'flex';
+        
         const isSpy = data.spyID === uID;
         document.getElementById('role-card').innerHTML = isSpy ? 
-            `<h2 style="color:var(--red);">ТИ ШПИГУН 🕵️</h2>` : 
-            `<p style="font-size:12px;opacity:0.6;">КАРТА:</p><h2 style="color:var(--green);">${data.cardName}</h2>`;
+            `<h2 style="color:var(--red); margin:0;">ТИ ШПИГУН 🕵️</h2>` : 
+            `<p style="font-size:12px; opacity:0.6; margin:0;">КАРТА:</p><h2 style="color:var(--green); margin:5px 0;">${data.cardName}</h2>`;
         
         if(isHost) document.getElementById('finish-btn').style.display = 'block';
 
-        // Чат
+        // Синхронізація чату
         db.ref('rooms/' + roomID + '/chat').off();
         db.ref('rooms/' + roomID + '/chat').on('child_added', snap => {
             const m = snap.val();
-            const w = document.getElementById('chat-window');
-            w.innerHTML += `<div class="msg"><b>${m.u}:</b> ${m.msg}</div>`;
-            w.scrollTop = w.scrollHeight;
+            const win = document.getElementById('chat-window');
+            win.innerHTML += `<div class="msg"><b>${m.u}:</b> ${m.msg}</div>`;
+            win.scrollTop = win.scrollHeight;
         });
 
-        // Оновлення списку голосування
-        updateVoteList(data.players, data.votes || {});
+        // Синхронізація голосування
+        updateVoteUI(data.players, data.votes || {});
     }
 
+    // ГОЛОСУВАННЯ
     function toggleVoting() {
-        const sect = document.getElementById('voting-section');
-        sect.style.display = sect.style.display === 'none' ? 'block' : 'none';
+        const s = document.getElementById('voting-section');
+        s.style.display = s.style.display === 'none' ? 'block' : 'none';
     }
 
-    function updateVoteList(players, votes) {
+    function updateVoteUI(players, votes) {
         const list = document.getElementById('vote-list');
         list.innerHTML = "";
         
-        // Підрахунок голосів
         let counts = {};
         Object.values(votes).forEach(vID => counts[vID] = (counts[vID] || 0) + 1);
 
         Object.keys(players).forEach(pID => {
-            if(pID === uID) return; // Не можна голосувати за себе
-            const pName = players[pID].name;
-            const voteBtn = document.createElement('div');
-            voteBtn.className = 'vote-item';
-            voteBtn.innerHTML = `<span>👤 ${pName}</span> <span class="vote-count">${counts[pID] || 0}</span>`;
-            voteBtn.onclick = () => castVote(pID);
-            list.appendChild(voteBtn);
+            if(pID === uID) return;
+            const item = document.createElement('div');
+            item.className = 'vote-item';
+            item.innerHTML = `<span>👤 ${players[pID].name}</span> <span class="vote-count">${counts[pID] || 0}</span>`;
+            item.onclick = () => castVote(pID);
+            list.appendChild(item);
         });
     }
 
     async function castVote(targetID) {
-        if(hasVoted) return alert("Ви вже проголосували!");
+        if(hasVoted) return alert("Голос вже віддано!");
         await db.ref('rooms/' + roomID + '/votes/' + uID).set(targetID);
         hasVoted = true;
-        alert("Голос прийнято!");
+        alert("Ви проголосували!");
     }
 
     function sendMsg() {
-        const i = document.getElementById('chat-input');
-        if(!i.value) return;
-        db.ref('rooms/' + roomID + '/chat').push({ u: uName, msg: i.value });
-        i.value = "";
+        const inp = document.getElementById('chat-input');
+        if(!inp.value.trim()) return;
+        db.ref('rooms/' + roomID + '/chat').push({ u: uName, msg: inp.value });
+        inp.value = "";
     }
 
     function finishGameAction() {
-        const winner = prompt("Хто переміг? Введіть ім'я:");
-        if(!winner) return;
+        const winnerName = prompt("Ім'я переможця:");
+        if(!winnerName) return;
+        
         db.ref('rooms/' + roomID + '/players').once('value', snap => {
             snap.forEach(p => {
-                if(p.val().name.toLowerCase() === winner.toLowerCase()) {
-                    db.ref('users/' + p.key + '/wins').transaction(c => (c||0)+1);
+                if(p.val().name.toLowerCase() === winnerName.toLowerCase()) {
+                    db.ref('users/' + p.key + '/wins').transaction(c => (c||0) + 1);
                 }
             });
             db.ref('rooms/' + roomID).remove().then(() => location.reload());
