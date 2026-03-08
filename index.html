@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clash Spy v18</title>
+    <title>Clash Spy v18.1</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -28,7 +28,6 @@
         .screen { display: none; flex: 1; padding: 15px; overflow-y: auto; }
         .active-screen { display: flex; flex-direction: column; }
 
-        /* КНОПКИ РІЗНИХ КОЛЬОРІВ */
         .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 900; color: white; text-transform: uppercase; cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
         .btn-blue { background: var(--blue-grad); border-bottom: 4px solid #1e40af; }
         .btn-red { background: var(--red-grad); border-bottom: 4px solid #991b1b; }
@@ -48,7 +47,6 @@
         .msg.mine { align-self: flex-end; background: #2563eb; }
         .msg.other { align-self: flex-start; background: #334155; }
 
-        /* АДМІНКА */
         #adm-btn { position: fixed; top: 15px; right: 15px; width: 40px; height: 40px; background: var(--accent); border-radius: 10px; display: none; align-items: center; justify-content: center; z-index: 1000; color: black; }
         #adm-panel { display:none; position:fixed; top:70px; right:20px; background:#1e293b; border:2px solid var(--accent); padding:15px; z-index:1001; border-radius:15px; width:220px; }
         
@@ -265,8 +263,9 @@
         setTimeout(() => {
             myVoted = false;
             document.getElementById('g-list').style.display='none';
+            document.getElementById('v-list').style.display='none';
             document.getElementById('play-ui-standard').style.display='block';
-            if(isHost) db.ref('rooms/'+room).update({status:'lobby', winner:null, votes:null, chat:null});
+            if(isHost) db.ref('rooms/'+room).update({status:'lobby', winner:null, votes:null, chat:null, turnIdx:0});
         }, 5000);
     }
 
